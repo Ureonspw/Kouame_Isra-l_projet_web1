@@ -1,3 +1,44 @@
+<?php
+session_start();
+require_once __DIR__ . '/config/database.php';
+
+// Traitement de la connexion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_POST['password'])) {
+    try {
+        $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+        $password = $_POST['password'];
+        
+        // Vérifier si l'email existe dans la table UTILISATEUR
+        $stmt = $conn->prepare("SELECT * FROM UTILISATEUR WHERE email = ? AND role = 'candidat'");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+        
+        if ($user && password_verify($password, $user['mot_de_passe'])) {
+            // Connexion réussie
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_name'] = $user['email']; // On utilise l'email car il n'y a pas de nom dans UTILISATEUR
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['success_message'] = "Connexion réussie !";
+            
+            // Redirection vers le dashboard candidat
+            header("Location: ./src/php/dashboard_candidat.php");
+            exit();
+        } else {
+            $_SESSION['error_message'] = "Email ou mot de passe incorrect";
+        }
+    } catch(PDOException $e) {
+        $_SESSION['error_message'] = "Erreur de connexion à la base de données";
+        error_log("Erreur PDO: " . $e->getMessage());
+    } catch(Exception $e) {
+        $_SESSION['error_message'] = "Une erreur est survenue";
+        error_log("Erreur: " . $e->getMessage());
+    }
+}
+?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,7 +53,7 @@
 
         <header>
             <div class="logo">
-                <img src="./assets/images/logo.png" alt="logo" onclick="window.location.href='src/html/admin_login.php'"> 
+                <img src="./assets/images/logo.png" alt="logo" onclick="window.location.href='src/php/admin_login.php'"> 
             </div>
             
                 <ul class="menu">
@@ -32,7 +73,7 @@
             </div>
             <div class="choixmenu">
                 <h2 onclick="window.location.href='./src/pdfs/Communique ENA.pdf'">Informations</h2>
-                <h3 onclick="window.location.href='./src/html/inscription_candidat.php'">inscription</h3>
+                <h3 onclick="window.location.href='./src/php/inscription_candidat.php'">inscription</h3>
             </div>
             <div class="contenuvus">
                 <div class="menu1">
@@ -289,6 +330,14 @@
           <!-- Formulaire de connexion -->
           <div class="containerpopbox2">
             <div class="tab-content active" id="login-tab">
+                <?php if(isset($_SESSION['error_message'])): ?>
+                    <div class="alert alert-danger" style="color: red; margin-bottom: 15px; padding: 10px; border-radius: 5px; background-color: #ffe6e6;">
+                        <?php 
+                            echo $_SESSION['error_message'];
+                            unset($_SESSION['error_message']);
+                        ?>
+                    </div>
+                <?php endif; ?>
                 <form method="POST" action="">
                     <div class="input-container">
                         <label for="email">
@@ -325,7 +374,7 @@
                         </div>
                     </div>
                     
-                    <button class="login-button" onclick="window.location.href='./src/html/dashboard_candidat.php'">
+                    <button type="submit" class="login-button">
                         <span>Connexion</span>
                         <div class="button-loader"></div>
                         <i class="fas fa-arrow-right"></i>
@@ -337,7 +386,7 @@
                 </div>
                 
                 <div class="login-footer">
-                    <p>Nouveau sur PUBLIGEST? <a class="switch-tab"  onclick="window.location.href='./src/html/inscription_candidat.php'">Créer un compte</a></p>
+                    <p>Nouveau sur PUBLIGEST? <a class="switch-tab"  onclick="window.location.href='./src/php/inscription_candidat.php'">Créer un compte</a></p>
                 </div>
             </div>
             

@@ -1,3 +1,20 @@
+
+
+<?php
+session_start();
+
+// Vérifier si l'utilisateur est connecté
+if (!isset($_SESSION['user_id'])) {
+    $_SESSION['error_message'] = "Veuillez vous connecter pour accéder à cette page.";
+    header("Location: ../index.php");
+    exit();
+}
+
+// L'utilisateur est connecté, on peut afficher la page
+$user_name = $_SESSION['user_name'];
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,7 +51,7 @@
                 </div>
                 <div class="slider-content-wrap">                
                     <div class="slider-content">
-                        <h2 class="heading-style-2">Bienvenu candidat KOUAME ISRAEL</h2>
+                        <h2 class="heading-style-2">Bienvenu candidat <?php echo $user_name; ?></h2>
                         <p>Bienvenu sur la plateforme de gestion des concours de la fonction publique côte d'ivoire</p>
                         <h3 class="heading-style-2">$779.99</h3>
                         <div class="social-icons">
@@ -75,8 +92,8 @@
                     <img src="./assets/images/profile.png" alt="Profile">
                 </div>
                 <div class="user-info">
-                    <div class="user-name">KOUAME ISRAEL</div>
-                    <div class="user-id">ID: 123456</div>
+                    <div class="user-name"><?php echo $user_name; ?></div>
+                    <div class="user-id">ID: <?php echo $_SESSION['user_id']; ?></div>
                 </div>
             </div>
             

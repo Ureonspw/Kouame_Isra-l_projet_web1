@@ -1,9 +1,15 @@
 <?php
 session_start();
-require_once 'config/database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        // Définition du répertoire d'upload
+        $upload_dir = __DIR__ . '/../../uploads/documents/';
+        if (!file_exists($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
         // Validation des données
         $errors = [];
         

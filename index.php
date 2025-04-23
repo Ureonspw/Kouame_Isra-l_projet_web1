@@ -386,7 +386,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
                 </div>
                 
                 <div class="login-footer">
-                    <p>Nouveau sur PUBLIGEST? <a class="switch-tab"  onclick="window.location.href='./src/php/inscription_candidat.php'">Créer un compte</a></p>
+                    <p>Nouveau sur PUBLIGEST? <a class="switch-tab"  onclick="window.location.href='./src/php/inscription.php'">Créer un compte</a></p>
                 </div>
             </div>
             

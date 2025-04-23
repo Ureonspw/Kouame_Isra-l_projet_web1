@@ -10,31 +10,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         // Vérifier si l'email existe déjà
-        $stmt = $conn->prepare("SELECT id FROM admin WHERE email = ?");
+        $stmt = $conn->prepare("SELECT id FROM UTILISATEUR WHERE email = ?");
         $stmt->execute([$_POST['email']]);
         if ($stmt->rowCount() > 0) {
             throw new Exception("Cet email est déjà utilisé.");
         }
 
         // Préparer et exécuter la requête d'insertion
-        $stmt = $conn->prepare("INSERT INTO admin (nom_complet, email, password) VALUES (?, ?, ?)");
+        $stmt = $conn->prepare("INSERT INTO UTILISATEUR (email, mot_de_passe, role) VALUES (?, ?, ?)");
         
         if ($stmt->execute([
-            $_POST['nom_complet'],
             $_POST['email'],
-            password_hash($_POST['password'], PASSWORD_DEFAULT)
+            password_hash($_POST['password'], PASSWORD_DEFAULT),
+            'candidat' // Par défaut, tous les nouveaux utilisateurs sont des candidats
         ])) {
-            $_SESSION['success_message'] = "Votre compte administrateur a été créé avec succès ! Vous pouvez maintenant vous connecter.";
-            header("Location: admin_login.php");
+            $_SESSION['success_message'] = "Votre compte a été créé avec succès !";
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'Compte créé avec succès']);
             exit();
         } else {
-            throw new Exception("Une erreur est survenue lors de la création du compte. Veuillez réessayer.");
+            throw new Exception("Une erreur est survenue lors de la création du compte.");
         }
     } catch (PDOException $e) {
-        $_SESSION['error_message'] = "Une erreur de base de données est survenue. Veuillez réessayer plus tard.";
         error_log("Erreur PDO: " . $e->getMessage());
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Une erreur de base de données est survenue.']);
+        exit();
     } catch (Exception $e) {
-        $_SESSION['error_message'] = $e->getMessage();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        exit();
     }
 }
 ?>
@@ -43,59 +48,149 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription Administrateur - MediConnect</title>
+    <title>Inscription - PUBLIGEST CI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root {
-            --primary-color: #2D5A77;
-            --secondary-color: #4A90E2;
-            --accent-color: #67B26F;
+            --primary-color: #F47721;
+            --primary-light: #FF9F4A;
+            --secondary-color: #0E9F60;
+            --secondary-light: #2ECC71;
+            --accent-color: #FFFFFF;
             --text-color: #2C3E50;
-            --light-bg: #F8FAFC;
+            --text-light: #64748B;
+            --bg-color: #F8FAFC;
+            --card-bg: #FFFFFF;
+            --error-color: #EF4444;
+            --success-color: #10B981;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background: linear-gradient(135deg, #F8FAFC 0%, #E2E8F0 100%);
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-color);
             color: var(--text-color);
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        .inscription-container {
-            max-width: 800px;
-            margin: 2rem auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(244, 119, 33, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(14, 159, 96, 0.1) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 1200px;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 700px;
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .illustration-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
             overflow: hidden;
         }
 
-        .left-panel {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 3rem 2rem;
-            height: 100%;
+        .illustration-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path fill="rgba(255,255,255,0.1)" d="M0 0h100v100H0z"/></svg>');
+            opacity: 0.1;
         }
 
-        .left-panel h1 {
-            font-size: 2.5rem;
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-container img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .logo-container h1 {
+            color: var(--accent-color);
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 1.5rem;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .feature-item {
+        .illustration-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .feature-card {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
             backdrop-filter: blur(10px);
-            transition: transform 0.3s ease;
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
+            cursor: pointer;
         }
 
-        .feature-item:hover {
+        .feature-card:hover {
             transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .feature-icon {
@@ -107,12 +202,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            margin-bottom: 1rem;
+            color: var(--accent-color);
         }
 
-        .right-panel {
-            padding: 3rem 2rem;
-            background: white;
+        .feature-text h3 {
+            color: var(--accent-color);
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-text p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .form-section {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .form-header {
@@ -122,166 +230,296 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .form-header h2 {
             color: var(--primary-color);
-            font-weight: 700;
             font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .form-section {
-            background: var(--light-bg);
-            padding: 2rem;
-            border-radius: 15px;
-            margin-bottom: 2rem;
-        }
-
-        .form-control {
-            border: 2px solid #E2E8F0;
-            border-radius: 10px;
-            padding: 0.75rem 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
-        }
-
-        .form-label {
-            font-weight: 600;
-            color: var(--text-color);
+            font-weight: 700;
             margin-bottom: 0.5rem;
         }
 
-        .required-field::after {
-            content: "*";
-            color: #E53E3E;
-            margin-left: 4px;
+        .form-header p {
+            color: var(--text-light);
+        }
+
+        .form-container {
+            max-width: 400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--bg-color);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(244, 119, 33, 0.1);
+            outline: none;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-color);
+        }
+
+        .password-toggle i {
+            font-size: 1.1rem;
         }
 
         .btn {
+            width: 100%;
             padding: 0.75rem 1.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            font-size: 1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
 
         .btn-primary {
-            background: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
             border: none;
+            color: var(--accent-color);
         }
 
         .btn-primary:hover {
-            background: var(--secondary-color);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         .btn-secondary {
-            background: #E2E8F0;
-            border: none;
+            background: var(--bg-color);
+            border: 2px solid #E2E8F0;
             color: var(--text-color);
         }
 
         .btn-secondary:hover {
-            background: #CBD5E0;
+            background: #E2E8F0;
+            transform: translateY(-2px);
         }
 
-        .form-actions {
-            display: flex;
-            justify-content: space-between;
+        .form-footer {
+            text-align: center;
             margin-top: 2rem;
+            color: var(--text-light);
+        }
+
+        .form-footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .form-footer a:hover {
+            color: var(--primary-light);
         }
 
         .alert {
-            border-radius: 10px;
             padding: 1rem;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .alert-danger {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--error-color);
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: var(--success-color);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .register-container {
+                grid-template-columns: 1fr;
+            }
+
+            .illustration-section {
+                display: none;
+            }
+
+            .form-section {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 1rem;
+            }
+
+            .register-container {
+                border-radius: 16px;
+            }
+
+            .form-section {
+                padding: 1.5rem;
+            }
+
+            .form-header h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container inscription-container">
-        <div class="row g-0">
-            <div class="col-lg-4">
-                <div class="left-panel">
-                    <h1>MediConnect</h1>
-                    <p class="lead mb-4">Votre plateforme de gestion médicale</p>
-                    
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div>
-                            <h5>Gestion sécurisée</h5>
-                            <p>Accès sécurisé à la plateforme d'administration</p>
-                        </div>
+    <div class="register-container">
+        <div class="illustration-section">
+            <div class="logo-container">
+                <img src="../../assets/images/logo.png" alt="PUBLIGEST Logo">
+                <h1>PUBLIGEST CI</h1>
+            </div>
+            
+            <div class="illustration-content">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-plus"></i>
                     </div>
-                    
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-users-cog"></i>
-                        </div>
-                        <div>
-                            <h5>Gestion des utilisateurs</h5>
-                            <p>Gérez les comptes docteurs et patients</p>
-                        </div>
+                    <div class="feature-text">
+                        <h3>Inscription rapide</h3>
+                        <p>Créez votre compte en quelques étapes simples</p>
                     </div>
-                    
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div>
-                            <h5>Tableau de bord</h5>
-                            <p>Suivez l'activité de la plateforme</p>
-                        </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Sécurité maximale</h3>
+                        <p>Vos données sont protégées et sécurisées</p>
+                    </div>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div class="feature-text">
+                        <h3>Concours accessibles</h3>
+                        <p>Accédez à tous les concours de la fonction publique</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="col-lg-8">
-                <div class="right-panel">
-                    <div class="form-header">
-                        <h2>Inscription Administrateur</h2>
-                        <p>Créez votre compte administrateur pour gérer la plateforme</p>
+        </div>
+
+        <div class="form-section">
+            <div class="form-header">
+                <h2>Créez votre compte</h2>
+                <p>Rejoignez PUBLIGEST CI pour accéder aux concours</p>
+            </div>
+
+            <?php if(isset($_SESSION['error_message'])): ?>
+                <div class="alert alert-danger">
+                    <?php 
+                        echo $_SESSION['error_message'];
+                        unset($_SESSION['error_message']);
+                    ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="form-container">
+                <form id="inscriptionForm" method="POST" action="admin_register.php">
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" required 
+                               placeholder="votre@email.com">
                     </div>
 
-                    <?php
-                    if(isset($_SESSION['error_message'])) {
-                        echo '<div class="alert alert-danger">' . $_SESSION['error_message'] . '</div>';
-                        unset($_SESSION['error_message']);
-                    }
-                    ?>
+                    <div class="form-group">
+                        <label for="password" class="form-label">Mot de passe</label>
+                        <input type="password" class="form-control" id="password" name="password" required
+                               placeholder="••••••••">
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
 
-                    <form id="inscriptionForm" method="POST" action="admin_register.php">
-                        <div class="form-section">
-                            <h3><i class="fas fa-user-shield me-2"></i>Informations administrateur</h3>
-                            
-                            <div class="mb-3">
-                                <label for="nom_complet" class="form-label required-field">Nom complet</label>
-                                <input type="text" class="form-control" id="nom_complet" name="nom_complet" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="email" class="form-label required-field">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" required>
-                            </div>
+                    <div class="form-group">
+                        <label for="confirm_password" class="form-label">Confirmer le mot de passe</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
+                               placeholder="••••••••">
+                        <button type="button" class="password-toggle" id="toggleConfirmPassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
 
-                            <div class="mb-3">
-                                <label for="password" class="form-label required-field">Mot de passe</label>
-                                <input type="password" class="form-control" id="password" name="password" required>
-                            </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" id="submitButton">
+                            <span>Créer mon compte</span>
+                            <div class="loading" style="display: none;"></div>
+                        </button>
+                    </div>
+                </form>
 
-                            <div class="mb-3">
-                                <label for="confirm_password" class="form-label required-field">Confirmer le mot de passe</label>
-                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="button" class="btn btn-secondary" onclick="window.location.href='../../index.php'">Annuler</button>
-                                <button type="submit" class="btn btn-primary">Créer le compte</button>
-                            </div>
-                        </div>
-                    </form>
+                <div class="form-footer">
+                    <p>Déjà un compte ? <a href="login.php">Connectez-vous</a></p>
                 </div>
             </div>
         </div>
@@ -289,50 +527,137 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Validation du formulaire
-        document.getElementById('inscriptionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Validation du mot de passe
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('inscriptionForm');
+            const submitButton = document.getElementById('submitButton');
+            const loadingSpinner = submitButton.querySelector('.loading');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirm_password');
+            const togglePassword = document.getElementById('togglePassword');
+            const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
 
-            if (password !== confirmPassword) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erreur',
-                    text: 'Les mots de passe ne correspondent pas',
-                    confirmButtonColor: '#2D5A77'
-                });
-                return;
-            }
-
-            // Validation de l'email
-            const email = document.getElementById('email').value;
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Erreur',
-                    text: 'Veuillez entrer une adresse email valide',
-                    confirmButtonColor: '#2D5A77'
-                });
-                return;
-            }
-
-            // Si tout est valide, soumettre le formulaire
-            Swal.fire({
-                title: 'Création du compte',
-                text: 'Veuillez patienter...',
-                allowOutsideClick: false,
-                showConfirmButton: false,
-                willOpen: () => {
-                    Swal.showLoading();
+            // Toggle password visibility
+            function togglePasswordVisibility(input, button) {
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                
+                // Toggle eye icon
+                const icon = button.querySelector('i');
+                if (type === 'text') {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
                 }
+            }
+
+            // Add click event listeners
+            if (togglePassword) {
+                togglePassword.addEventListener('click', function() {
+                    togglePasswordVisibility(passwordInput, this);
+                });
+            }
+
+            if (toggleConfirmPassword) {
+                toggleConfirmPassword.addEventListener('click', function() {
+                    togglePasswordVisibility(confirmPasswordInput, this);
+                });
+            }
+
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = passwordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+
+                // Email validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Veuillez entrer une adresse email valide',
+                        confirmButtonColor: '#F47721'
+                    });
+                    return;
+                }
+
+                // Password validation
+                if (password.length < 8) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Le mot de passe doit contenir au moins 8 caractères',
+                        confirmButtonColor: '#F47721'
+                    });
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: 'Les mots de passe ne correspondent pas',
+                        confirmButtonColor: '#F47721'
+                    });
+                    return;
+                }
+
+                // Show loading state
+                submitButton.disabled = true;
+                submitButton.querySelector('span').style.display = 'none';
+                loadingSpinner.style.display = 'block';
+
+                // Submit form
+                fetch('process_register.php', {
+                    method: 'POST',
+                    body: new FormData(form)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur réseau');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Succès !',
+                            text: data.message,
+                            confirmButtonColor: '#F47721'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.location.href = 'admin_register_success.php';
+                            }
+                        });
+                    } else {
+                        throw new Error(data.message);
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erreur',
+                        text: error.message || 'Une erreur est survenue lors de la création du compte',
+                        confirmButtonColor: '#F47721'
+                    });
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                    submitButton.querySelector('span').style.display = 'block';
+                    loadingSpinner.style.display = 'none';
+                });
             });
 
-            // Soumettre le formulaire
-            this.submit();
+            // Add animation to feature cards
+            const featureCards = document.querySelectorAll('.feature-card');
+            featureCards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
         });
     </script>
 </body>

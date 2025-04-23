@@ -1,3 +1,16 @@
+<?php
+session_start();
+
+// Vérifier si l'utilisateur est connecté
+if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
+    header("Location: admin_login.php");
+    exit();
+}
+
+// L'utilisateur est connecté, on peut afficher la page
+$user_email = $_SESSION['user_email'];
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,7 +37,7 @@
             <li><a href="#">Contact</a></li>
             <li><a href="#">Concour</a></li>
         </ul>
-        <div class="login" id="loginButton" popovertarget="popover">login</div>
+        <div class="login" id="logoutButton">Déconnexion</div>
     </header>
 
     <!-- Contenu original -->
@@ -177,9 +190,8 @@
 
             <div class="sidebar-footer">
                 <div class="user-profile">
-                    <img src="../assets/images/profile.png" alt="Profile">
                     <div class="user-info">
-                        <h4>John Doe</h4>
+                        <h4><?php echo htmlspecialchars($user_email); ?></h4>
                         <p>Administrateur</p>
                     </div>
                 </div>
@@ -531,6 +543,25 @@
                     }
                 }
             }
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            // Envoyer une requête de déconnexion
+            fetch('process_logout.php', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '../../index.php';
+                } else {
+                    alert('Erreur lors de la déconnexion');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue');
+            });
         });
     </script>
 </body>

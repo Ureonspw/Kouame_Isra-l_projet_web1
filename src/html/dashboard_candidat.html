@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>PUBLIGEST CI</title>
+</head>
+
+    <body>
+
+        <header>
+            <div class="logo">
+                <img src="../../assets/images/logo.png" alt="logo">
+            </div>
+            
+            <button class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <ul class="menu">
+                <li><a href="#">Accueil</a></li>
+                <li><a href="#">A propos</a></li>
+                <li><a href="#">Contact</a></li>
+                <li><a href="#">Concour</a></li>
+            </ul>
+            <div class="login" id="loginButton" popovertarget="popover">login</div>
+        </header>
+        <section class="slider-main">
+            <div class="container">
+                <div class="logo">
+                    <h1 href="#">PUBLIGEST_CI</h1>
+                </div>
+                <div class="slider-content-wrap">                
+                    <div class="slider-content">
+                        <h2 class="heading-style-2">Bienvenu candidat KOUAME ISRAEL</h2>
+                        <p>Bienvenu sur la plateforme de gestion des concours de la fonction publique côte d'ivoire</p>
+                        <h3 class="heading-style-2">$779.99</h3>
+                        <div class="social-icons">
+                            <a href="#"><img src="https://www.yudiz.com/codepen/headphone-slider/instagram-icon.svg" alt="instagram"></a>
+                            <a href="#"><img src="https://www.yudiz.com/codepen/headphone-slider/facbook-icon.svg" alt="facebook"></a>
+                            <a href="#"><img src="https://www.yudiz.com/codepen/headphone-slider/twiter-icon.svg" alt="twitter"></a>
+                        </div>
+                    </div>               
+                </div>         
+            </div>
+            <div class="slider-images">       
+                <img class="slider-image" src="../../assets/images/carousselimg/c1.png" alt="headphone image">        
+                <img class="slider-image" src="../../assets/images/carousselimg/caroussel2.png" alt="headphone image">        
+                <img class="slider-image" src="../../assets/images/carousselimg/carroussel1.png" alt="headphone image">        
+                <img class="slider-image" src="../../assets/images/carousselimg/c2.png" alt="headphone image">        
+                <img class="slider-image" src="../../assets/images/carousselimg/Male Student with Books Background Removed.png" alt="headphone image">        
+            </div> 
+            <div id="backgrounds">
+                <div class="background" style="background: radial-gradient(50% 50% at 50% 50%, #f5dbc3 0%, #f7883e 92.19%);"></div>
+                <div class="background" style="background: radial-gradient(50% 50% at 50% 50%, #D7D7D7 0%, #979797 100%);"></div>
+                <div class="background" style="background: radial-gradient(50% 50% at 50% 50%,  #C7F6D0 0%, #7CB686 100%);"></div>
+                <div class="background" style="background: radial-gradient(50% 50% at 50% 50%, #b2b8ff 0%, #3683ffe0 100%);"></div>
+                <div class="background" style="background: radial-gradient(50% 50% at 50% 50%, #6B6B6B 0%, #292929 100%);"></div>
+            </div>
+        </section>   
+
+
+
+
+
+
+
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="profile-picture">
+                    <img src="./assets/images/profile.png" alt="Profile">
+                </div>
+                <div class="user-info">
+                    <div class="user-name">KOUAME ISRAEL</div>
+                    <div class="user-id">ID: 123456</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <div class="menu-section">
+                    <h3>Menu</h3>
+                    <ul>
+                        <li class="active" data-section="dashboard">
+                            <a href="#" data-target="dashboard"><i class="fas fa-chart-line"></i> Suivi des étapes par concours</a>
+                        </li>
+                        <li data-section="concours">
+                            <a href="#" data-target="concours"><i class="fas fa-trophy"></i> Sélectionner le concours</a>
+                        </li>
+                        <li data-section="types">
+                            <a href="#" data-target="types"><i class="fas fa-list"></i> profil candidat</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3>Profil candidat</h3>
+                    <ul>
+                        <li data-section="postuler"><a href="#" data-target="postuler"><i class="fas fa-file-alt"></i> Postuler à un concours</a></li>
+                        <li data-section="suivi"><a href="#" data-target="suivi"><i class="fas fa-tasks"></i> Suivi des étapes</a></li>
+                        <li data-section="dossier"><a href="#" data-target="dossier"><i class="fas fa-folder"></i> Mon dossier en ligne</a></li>
+                        <li data-section="fiches"><a href="#" data-target="fiches"><i class="fas fa-receipt"></i> Fiches & reçus</a></li>
+                        <li data-section="login"><a href="#" data-target="login"><i class="fas fa-key"></i> Login et mot de passe</a></li>
+                        <li data-section="formations"><a href="#" data-target="formations"><i class="fas fa-graduation-cap"></i> Formations / Diplômes</a></li>
+                        <li data-section="emploi"><a href="#" data-target="emploi"><i class="fas fa-briefcase"></i> Emploi contractuel</a></li>
+                        <li data-section="paiement"><a href="#" data-target="paiement"><i class="fas fa-money-bill-wave"></i> Régulariser un paiement</a></li>
+                        <li data-section="cours"><a href="#" data-target="cours"><i class="fas fa-book"></i> Cours de préparation</a></li>
+                        <li data-section="reclamations"><a href="#" data-target="reclamations"><i class="fas fa-exclamation-circle"></i> Réclamations</a></li>
+                        <li data-section="permis"><a href="#" data-target="permis"><i class="fas fa-id-card"></i> Permis de conduire</a></li>
+                    </ul>
+                </div>
+            </nav>
+
+       
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <div class="content-section active" id="dashboard">
+                <div class="content-header">
+                    <h1>Tableau de bord</h1>
+                    <div class="user-actions">
+                        <button class="notification-btn" data-tooltip="Notifications"><i class="fas fa-bell"></i></button>
+                        <button class="help-btn" data-tooltip="Aide"><i class="fas fa-question-circle"></i></button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>Mes concours en cours</h3>
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="widget-content">
+                            <div class="concours-item">
+                                <i class="fas fa-graduation-cap"></i>
+                                <div class="concours-info">
+                                    <h4>Concours ENA 2025</h4>
+                                    <p>Date limite: 15/06/2025</p>
+                                </div>
+                                <span class="status-badge status-en-cours">En cours</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>Prochaines étapes</h3>
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="widget-content">
+                            <div class="calendar">
+                                <!-- Calendar content will be added dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>Notifications récentes</h3>
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="widget-content">
+                            <div class="notification-item">
+                                <div class="notification-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <h4>Nouvelle étape disponible</h4>
+                                    <p>Votre dossier a été validé pour le concours ENA 2025</p>
+                                    <span class="notification-time">Il y a 2 heures</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other Sections -->
+            <div class="content-section" id="concours">
+                <div class="content-header">
+                    <h1>Sélectionner le concours</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Concours content will be loaded here -->
+                </div>
+            </div>
+
+            <div class="content-section" id="types">
+                <div class="content-header">
+                    <h1>profil candidat</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Types content will be loaded here -->
+                    test
+                </div>
+                
+            </div>
+            <div class="content-section" id="postuler">
+                <div class="content-header">
+                    <h1>Postuler à un concours</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Postuler content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="suivi">
+                <div class="content-header">
+                    <h1>Suivi des étapes</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Suivi content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="dossier">
+                <div class="content-header">
+                    <h1>Mon dossier en ligne</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Dossier content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="fiches">
+                <div class="content-header">
+                    <h1>Fiches & reçus</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Fiches content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="login">
+                <div class="content-header">
+                    <h1>Login et mot de passe</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Login content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="formations">
+                <div class="content-header">
+                    <h1>Formations / Diplômes</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Formations content will be loaded here -->
+                </div>
+            </div>
+
+            <div class="content-section" id="emploi">
+                <div class="content-header">
+                    <h1>Emploi contractuel</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Emploi content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="paiement">
+                <div class="content-header">
+                    <h1>Régulariser un paiement</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Paiement content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="cours">
+                <div class="content-header">
+                    <h1>Cours de préparation</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Cours content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="suivi">
+                <div class="content-header">
+                    <h1>Suivi des étapes</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Suivi content will be loaded here -->
+                </div>
+            </div>
+            <div class="content-section" id="reclamations">
+                <div class="content-header">
+                    <h1>Réclamations</h1>
+                </div>
+                <div class="section-content">
+                    <!-- Réclamations content will be loaded here -->
+                </div>
+            </div>
+           
+            
+        </main>
+    </div>
+
+    
+
+
+
+<footer>
+    <div class="footer-content">
+        <div class="footer-section">
+            <h3>Contactez-nous</h3>
+            <p>Email: info@publigest.ci</p>
+            <p>Téléphone: +225 XX XX XX XX</p>
+            <p>Adresse: Abidjan, Côte d'Ivoire</p>
+        </div>
+        <div class="footer-section">
+            <h3>Liens Rapides</h3>
+            <ul>
+                <li><a href="#">Accueil</a></li>
+                <li><a href="#">A propos</a></li>
+                <li><a href="#">Contact</a></li>
+                <li><a href="#">Concours</a></li>
+            </ul>
+        </div>
+        <div class="footer-section">
+            <h3>Suivez-nous</h3>
+            <div class="social-links">
+                <a href="#"><img src="../../assets/images/facebook.png" alt="Facebook"></a>
+                <a href="#"><img src="../../assets/images/Instagram.png" alt="Twitter"></a>
+                <a href="#"><img src="../../assets/images/LinkedIn.webp" alt="LinkedIn"></a>
+            </div>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2024 PUBLIGEST CI. Tous droits réservés.</p>
+    </div>
+</footer>
+        <script src="../../assets/js/dashboard.js"></script> 
+    </body>
+
+</html>
+
+

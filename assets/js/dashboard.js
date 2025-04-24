@@ -106,3 +106,67 @@ images[0].classList.add('active');
             mainContent.classList.remove('menu-active');
         }
     });
+
+// Fonctions pour la modal de changement de mot de passe
+function showPasswordModal() {
+    document.getElementById('passwordModal').style.display = 'block';
+}
+
+function hidePasswordModal() {
+    document.getElementById('passwordModal').style.display = 'none';
+    document.getElementById('changePasswordForm').reset();
+}
+
+// Fermer la modal en cliquant en dehors
+window.onclick = function(event) {
+    const modal = document.getElementById('passwordModal');
+    if (event.target == modal) {
+        hidePasswordModal();
+    }
+}
+
+// Gérer la soumission du formulaire
+document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        alert('Les nouveaux mots de passe ne correspondent pas');
+        return;
+    }
+    
+    // Ici, vous pouvez ajouter la logique pour envoyer les données au serveur
+    // Par exemple :
+    /*
+    fetch('change_password.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            currentPassword: currentPassword,
+            newPassword: newPassword
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Mot de passe changé avec succès');
+            hidePasswordModal();
+        } else {
+            alert(data.message || 'Erreur lors du changement de mot de passe');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue');
+    });
+    */
+    
+    // Pour l'instant, on affiche juste un message
+    alert('Fonctionnalité de changement de mot de passe à implémenter');
+    hidePasswordModal();
+});

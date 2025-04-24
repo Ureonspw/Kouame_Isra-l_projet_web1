@@ -748,7 +748,7 @@ html { overflow-x: hidden;}
 img{user-select: none;}
 body { overflow-x: hidden; position: relative;font-family: 'Montserrat', sans-serif;height: 100svh;}
 a{display: inline-block;}
-.heading-style-2{color: #FFF; font-size: 50px; font-weight: 900; line-height: 50px; margin-bottom: 40px;}
+.heading-style-2{color: #FFF; font-size: 40px; font-weight: 900; line-height: 50px; margin-bottom: 40px;}
 p{color: #FFF; font-family: Montserrat; font-size: 18px; font-style: normal; font-weight: 400; line-height: 35px;margin-bottom: 28px;}
 
 /* logo */

@@ -137,6 +137,18 @@ function setupScrollAnimation() {
     elements.forEach(element => observer.observe(element));
 }
 
+function showPopover() {
+    document.getElementById('popover').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closePopover() {
+    document.getElementById('popover').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
 // Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
     initializeElements();
@@ -146,4 +158,15 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSocialButtons();
     setupAppointmentForm();
     setupScrollAnimation();
+
+    // Ajouter l'événement click sur le bouton login
+    document.getElementById('loginButton').addEventListener('click', showPopover);
+
+    // Fermer le popover en cliquant sur l'overlay
+    document.getElementById('overlay').addEventListener('click', closePopover);
+
+    // Empêcher la propagation du click sur le popover lui-même
+    document.getElementById('popover').addEventListener('click', function(e) {
+        e.stopPropagation();
+    });
 }); 

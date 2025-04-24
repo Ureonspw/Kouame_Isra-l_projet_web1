@@ -1,0 +1,17 @@
+.logout-btn {
+    margin-left: auto;
+}
+
+.btn-deconnexion {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #dc3545;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.btn-deconnexion:hover {
+    background-color: #c82333;
+} 

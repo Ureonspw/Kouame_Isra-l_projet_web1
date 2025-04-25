@@ -1,35 +1,42 @@
 <?php
+// Démarrage de la session pour gérer les variables de session
 session_start();
+// Inclusion du fichier de configuration de la base de données
 require_once __DIR__ . '/config/database.php';
 
-// Traitement de la connexion
+// Section de traitement de la connexion utilisateur
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_POST['password'])) {
     try {
+        // Nettoyage et validation de l'email
         $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
         $password = $_POST['password'];
         
-        // Vérifier si l'email existe dans la table UTILISATEUR
+        // Requête SQL pour vérifier les informations de connexion
         $stmt = $conn->prepare("SELECT * FROM UTILISATEUR WHERE email = ? AND role = 'candidat'");
         $stmt->execute([$email]);
         $user = $stmt->fetch();
         
+        // Vérification du mot de passe et création de la session
         if ($user && password_verify($password, $user['mot_de_passe'])) {
-            // Connexion réussie
+            // Stockage des informations utilisateur dans la session
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['user_name'] = $user['email']; // On utilise l'email car il n'y a pas de nom dans UTILISATEUR
+            $_SESSION['user_name'] = $user['email'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['success_message'] = "Connexion réussie !";
             
-            // Redirection vers le dashboard candidat
+            // Redirection vers le tableau de bord du candidat
             header("Location: ./src/php/dashboard_candidat.php");
             exit();
         } else {
+            // Message d'erreur en cas d'échec de connexion
             $_SESSION['error_message'] = "Email ou mot de passe incorrect";
         }
     } catch(PDOException $e) {
+        // Gestion des erreurs de base de données
         $_SESSION['error_message'] = "Erreur de connexion à la base de données";
         error_log("Erreur PDO: " . $e->getMessage());
     } catch(Exception $e) {
+        // Gestion des erreurs générales
         $_SESSION['error_message'] = "Une erreur est survenue";
         error_log("Erreur: " . $e->getMessage());
     }
@@ -39,38 +46,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Configuration de base de la page -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Liens vers les fichiers CSS et ressources -->
     <link rel="stylesheet" href="./assets/css/mainpage.css">
     <link rel="shortcut icon" href="./assets/images/logo.png" type="image/x-icon">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>PUBLIGEST CI</title>
 </head>
 <body>
+    <!-- En-tête de la page avec logo et menu de navigation -->
     <header>
         <div class="logo">
             <img src="./assets/images/logo.png" alt="logo" onclick="window.location.href='src/php/admin_login.php'"> 
         </div>
         <ul class="menu">
-            <li><a href="#">Accueil</a></li>
-            <li><a href="#">A propos</a></li>
-            <li><a href="#">Contact</a></li>
-            <li><a href="#">Concour</a></li>
+            <li><a href="#accueil">Accueil</a></li>
+            <li><a href="#about">A propos</a></li>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="#concour">Concour</a></li>
         </ul>
         <div class="login" id="loginButton" popovertarget="popover">login</div>
     </header>
 
-    <div class="container">
+    <!-- Section principale d'accueil -->
+    <div class="container" id="accueil">
         <div class="contenttitlegeneral">
             <h1>Bienvenue sur PUBLIGEST CI</h1>
         </div>
         <div class="content">
             <p>Notre plateforme facilite l'accès aux concours de la fonction publique en Côte d'Ivoire. Elle permet une inscription rapide, un suivi en temps réel des candidatures et un accès simple à toutes les informations essentielles, partout et à tout moment.</p>
         </div>
+        <!-- Menu de navigation rapide -->
         <div class="choixmenu">
             <h2 onclick="window.location.href='./src/pdfs/Communique ENA.pdf'">Informations</h2>
-            <h3 onclick="window.location.href='./src/php/inscription_candidat.php'">inscription</h3>
+            <h3 onclick="window.location.href='./src/php/inscription.php'">inscription</h3>
         </div>
+        <!-- Section des étapes du processus -->
         <div class="contenuvus">
             <div class="menu1">
                 <img src="./assets/images/Material Symbols Icon Guide.png" alt="">
@@ -85,6 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
                 <h3>admition</h3>
             </div>
         </div>
+        <!-- Carrousel d'images -->
         <div class="imganimationcirlcle">
             <img src="./assets/images/carroussel1.png" alt="" class="caroussel1">
             <img src="./assets/images/caroussel2.png" alt="" class="caroussel2">
@@ -92,7 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
         </div>
     </div>
 
-    <div class="contentdevellopement">
+    <!-- Section des concours et informations -->
+    <div id="concour" class="contentdevellopement">
+        <!-- Bloc d'informations sur les concours -->
         <div class="infoblcks">
             <div class="infoblcks1">
                 <h1>COMMUNIQUE MEFPMA</h1>
@@ -102,34 +118,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
             <div class="infoblcks1">
                 <h1>EPREUVE DE PRESELECTION </h1>
                 <h4>Il est porté à la connaissance de l'ensemble des candidats aux concours direct d'entrée en 2026 à l'Ecole Nationale d'Administration (ENA), que les convocations pour l'étape de présélection sont disponible</h4>
-                <div>voir la convocation <h4>✒︎</h4></div>
             </div>
         </div>
 
+        <!-- Informations détaillées sur les différents concours -->
         <div class="concourinfobloc">
             <div class="concourinfobloc1">
                 <h3>MFP - DIRECTION DES CONCOURS <samp><img src="./assets/images/book_26dp_EFEFEF_FILL0_wght400_GRAD0_opsz24.png" alt=""></samp></h3>
                 <h4>Il est porté à la connaissance des personnes désireuses de faire acte de candidature aux concours administratifs de la session 2025 que la fin des inscriptions en ligne , initialement prévue pour le vendredi 11 avril 2025, est reportée au mercredi 30 avril 2025.</h4>
-                <div>en savoir plus<h4>✒︎</h4></div>
             </div>
             <div class="concourinfobloc1">
                 <h3>MFP. - DIASPORA <samp><img src="./assets/images/Material Icons Assignment 26dp.png" alt=""></samp></h3>
                 <h4>Il est porté à la connaissance de l'ensemble des candidats aux concours direct d'entrée en 2026 à l'Ecole Nationale d'Administration (ENA), que les convocations pour l'étape de présélection sont disponible</h4>
-                <div>voir la convocation <h4>✒︎</h4></div>
             </div>
             <div class="concourinfobloc1">
                 <h3>ENA - ÉCOLE NATIONALE D'ADMINISTRATION <samp><img src="./assets/images/Material Symbols Icon 26dp.png" alt=""></samp></h3>
                 <h4>Il est porté à la connaissance des personnes désireuses de faire acte de candidature aux concours direct d'entrée en 2026 à l'Ecole Nationale d'Administration (ENA), que les convocations pour l'étape de présélection sont disponible</h4>
-                <div>voir la convocation <h4>✒︎</h4></div>
             </div>
         </div>
 
+        <!-- Section des prérequis pour l'inscription -->
         <div class="info-special-container">
             <div class="info-special-header">
-                <h3>DISPOSITIONS À PRENDRE AVANT L'INSCRIPTION EN LIGNE</h3>
+                <h3 id="about">DISPOSITIONS À PRENDRE AVANT L'INSCRIPTION EN LIGNE</h3>
                 <div class="header-decoration"></div>
             </div>
             <div class="info-special-content">
+                <!-- Liste des conditions requises -->
                 <div class="info-special-item">
                     <div class="info-icon-wrapper">
                         <i class="fas fa-check-circle"></i>
@@ -192,6 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
                 </div>
             </div>
             
+            <!-- Notes importantes -->
             <div class="info-special-notes">
                 <div class="note-item">
                     <div class="note-icon-wrapper">
@@ -227,12 +243,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
         </div>
     </div>
 
+    <!-- Section d'assistance -->
     <div class="assistance-container">
         <div class="assistance-header">
-            <h2>ASSISTANCE AUX CANDIDATS</h2>
+            <h2 id="contact">ASSISTANCE AUX CANDIDATS</h2>
             <p class="assistance-subtitle">Nous sommes là pour vous aider</p>
         </div>
         <div class="assistance-grid">
+            <!-- Carte d'assistance MFP -->
             <div class="assistance-card">
                 <div class="card-icon">
                     <i class="fas fa-building"></i>
@@ -383,10 +401,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email']) && isset($_P
             <div class="footer-section">
                 <h3>Liens Rapides</h3>
                 <ul>
-                    <li><a href="#">Accueil</a></li>
-                    <li><a href="#">A propos</a></li>
-                    <li><a href="#">Contact</a></li>
-                    <li><a href="#">Concours</a></li>
+                    <li><a href="#accueil">Accueil</a></li>
+                    <li><a href="#about">A propos</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="#concour">Concours</a></li>
                 </ul>
             </div>
             <div class="footer-section">

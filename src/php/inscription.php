@@ -23,7 +23,7 @@ function generateNumInscription() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscription Candidat</title>
+    <title>Inscription Candidato</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -393,7 +393,7 @@ function generateNumInscription() {
             </div>
         </div>
 
-        <form id="registrationForm" action="process_inscription.php" method="POST" enctype="multipart/form-data">
+        <form id="registrationForm" action="process_inscription_candidat.php" method="POST" enctype="multipart/form-data">
             <!-- Étape 1: Informations de connexion -->
             <div class="form-section active" id="step1">
                 <h3><i class="fas fa-user-lock"></i> Informations de connexion</h3>

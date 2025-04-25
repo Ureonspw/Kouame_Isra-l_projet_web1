@@ -10,57 +10,38 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
 // L'utilisateur est connecté, on peut afficher la page
 $user_email = $_SESSION['user_email'];
 
-require_once '../../config/database.php';
-
-// Récupérer les statistiques
+// Récupération des statistiques
 try {
-    // Nombre de concours actifs (sessions en cours)
-    $stmt = $conn->query("
-        SELECT COUNT(*) as count 
-        FROM SESSION_CONCOURS 
-        WHERE date_ouverture <= CURDATE() 
-        AND date_cloture >= CURDATE()
-    ");
-    $concours_actifs = $stmt->fetch()['count'];
-
-    // Nombre de candidats inscrits aujourd'hui
-    $stmt = $conn->query("
-        SELECT COUNT(*) as count 
-        FROM INSCRIPTION 
-        WHERE DATE(date_inscription) = CURDATE()
-    ");
-    $candidats_aujourdhui = $stmt->fetch()['count'];
-
-    // Nombre total de candidats
-    $stmt = $conn->query("
-        SELECT COUNT(*) as count 
-        FROM CANDIDAT
-    ");
-    $total_candidats = $stmt->fetch()['count'];
-
-    // Dossiers en attente de traitement
-    $stmt = $conn->query("
-        SELECT COUNT(*) as count 
-        FROM INSCRIPTION 
-        WHERE statut = 'en_attente'
-    ");
-    $dossiers_attente = $stmt->fetch()['count'];
-
-    // Taux de complétion des dossiers (inscriptions validées / total inscriptions)
-    $stmt = $conn->query("
-        SELECT 
-            (SELECT COUNT(*) FROM INSCRIPTION WHERE statut = 'valide') * 100.0 / 
-            NULLIF((SELECT COUNT(*) FROM INSCRIPTION), 0) as taux
-    ");
-    $taux_completion = round($stmt->fetch()['taux'] ?? 0, 1);
-
+    // Connexion à la base de données
+    require_once '../../config/database.php';
+    
+    // 1. Nombre de concours actifs (sessions en cours)
+    $stmt = $conn->query("SELECT COUNT(*) FROM SESSION_CONCOURS 
+                         WHERE date_ouverture <= CURDATE() 
+                         AND date_cloture >= CURDATE()");
+    $concours_actifs = $stmt->fetchColumn();
+    
+    // 2. Nombre total de candidats inscrits
+    $stmt = $conn->query("SELECT COUNT(*) FROM CANDIDAT");
+    $total_candidats = $stmt->fetchColumn();
+    
+    // 3. Nombre de dossiers en attente
+    $stmt = $conn->query("SELECT COUNT(*) FROM INSCRIPTION 
+                         WHERE statut = 'en_attente'");
+    $dossiers_attente = $stmt->fetchColumn();
+    
+    // 4. Taux de paiement des inscriptions
+    $stmt = $conn->query("SELECT 
+                         (SELECT COUNT(*) FROM PAIEMENT WHERE statut = 'valide') * 100.0 / 
+                         (SELECT COUNT(*) FROM INSCRIPTION) as taux_paiement");
+    $taux_paiement = round($stmt->fetchColumn(), 1);
+    
 } catch(PDOException $e) {
-    error_log("Erreur lors de la récupération des statistiques: " . $e->getMessage());
+    // En cas d'erreur, on utilise des valeurs par défaut
     $concours_actifs = 0;
-    $candidats_aujourdhui = 0;
     $total_candidats = 0;
     $dossiers_attente = 0;
-    $taux_completion = 0;
+    $taux_paiement = 0;
 }
 ?>
 
@@ -1693,12 +1674,6 @@ try {
                                 <span>Vue d'ensemble</span>
                             </a>
                         </li>
-                        <li data-section="statistics">
-                            <a href="#">
-                                <i class="fas fa-chart-line"></i>
-                                <span>Statistiques</span>
-                            </a>
-                        </li>
                     </ul>
                 </div>
 
@@ -1817,7 +1792,7 @@ try {
                             <div class="stat-info">
                                 <h3>Candidats Inscrits</h3>
                                 <p class="stat-number"><?php echo number_format($total_candidats); ?></p>
-                                <span class="stat-change positive">+<?php echo $candidats_aujourdhui; ?> aujourd'hui</span>
+                                <span class="stat-change positive">Total</span>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -1827,17 +1802,17 @@ try {
                             <div class="stat-info">
                                 <h3>Dossiers à Traiter</h3>
                                 <p class="stat-number"><?php echo $dossiers_attente; ?></p>
-                                <span class="stat-change negative">En attente de validation</span>
+                                <span class="stat-change negative">En attente</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon red">
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-money-bill-wave"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>Taux de Validation</h3>
-                                <p class="stat-number"><?php echo $taux_completion; ?>%</p>
-                                <span class="stat-change positive">Dossiers validés</span>
+                                <h3>Taux de Paiement</h3>
+                                <p class="stat-number"><?php echo $taux_paiement; ?>%</p>
+                                <span class="stat-change positive">Des inscriptions</span>
                             </div>
                         </div>
                     </div>
@@ -3419,60 +3394,83 @@ try {
         // Fonction pour voir les détails d'un candidat
         function viewCandidateDetails(candidateId) {
             fetch(`get_candidate_details.php?id=${candidateId}`)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la récupération des données');
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+
                     // Remplir les informations personnelles
                     document.getElementById('candidateName').textContent = `${data.nom} ${data.prenoms}`;
-                    document.getElementById('candidateBirthDate').textContent = data.date_naissance;
-                    document.getElementById('candidateNationality').textContent = data.nationalite;
-                    document.getElementById('candidateIdNumber').textContent = data.num_piece;
-                    document.getElementById('candidatePhone').textContent = data.telephone_principal;
-                    document.getElementById('candidateAddress').textContent = data.adresse_postale;
+                    document.getElementById('candidateBirthDate').textContent = data.date_naissance || 'Non spécifié';
+                    document.getElementById('candidateNationality').textContent = data.nationalite || 'Non spécifié';
+                    document.getElementById('candidateIdNumber').textContent = data.num_piece || 'Non spécifié';
+                    document.getElementById('candidatePhone').textContent = data.telephone_principal || 'Non spécifié';
+                    document.getElementById('candidateAddress').textContent = data.adresse_postale || 'Non spécifié';
 
                     // Remplir les documents
                     const documentsList = document.getElementById('documentsList');
                     documentsList.innerHTML = '';
-                    data.documents.forEach(doc => {
-                        const docItem = document.createElement('div');
-                        docItem.className = 'document-item';
-                        docItem.innerHTML = `
-                            <h5>${doc.type_document}</h5>
-                            <a href="/${doc.fichier_url}" target="_blank" class="view-doc">
-                                <i class="fas fa-file-pdf"></i> Voir le document
-                            </a>
-                        `;
-                        documentsList.appendChild(docItem);
-                    });
+                    if (data.documents && data.documents.length > 0) {
+                        data.documents.forEach(doc => {
+                            const docItem = document.createElement('div');
+                            docItem.className = 'document-item';
+                            docItem.innerHTML = `
+                                <h5>${doc.type_document || 'Document'}</h5>
+                                <a href="../../${doc.fichier_url}" target="_blank" class="view-doc">
+                                    <i class="fas fa-file-pdf"></i> Voir le document
+                                </a>
+                            `;
+                            documentsList.appendChild(docItem);
+                        });
+                    } else {
+                        documentsList.innerHTML = '<p>Aucun document fourni</p>';
+                    }
 
                     // Remplir les diplômes
                     const diplomasList = document.getElementById('diplomasList');
                     diplomasList.innerHTML = '';
-                    data.diplomes.forEach(diploma => {
-                        const diplomaItem = document.createElement('div');
-                        diplomaItem.className = 'diploma-item';
-                        diplomaItem.innerHTML = `
-                            <h5>${diploma.nom}</h5>
-                            <p><strong>Niveau:</strong> ${diploma.niveau}</p>
-                            <p><strong>Année:</strong> ${diploma.annee_obtention}</p>
-                            <p><strong>Établissement:</strong> ${diploma.etablissement}</p>
-                            <a href="/${diploma.scan_url}" target="_blank" class="view-doc">
-                                <i class="fas fa-file-pdf"></i> Voir le diplôme
-                            </a>
-                        `;
-                        diplomasList.appendChild(diplomaItem);
-                    });
+                    if (data.diplomes && data.diplomes.length > 0) {
+                        data.diplomes.forEach(diploma => {
+                            const diplomaItem = document.createElement('div');
+                            diplomaItem.className = 'diploma-item';
+                            // Extraire uniquement le nom du fichier du chemin complet
+                            const fileName = diploma.scan_url.split('/').pop();
+                            diplomaItem.innerHTML = `
+                                <h5>${diploma.nom || 'Diplôme'}</h5>
+                                <p><strong>Niveau:</strong> ${diploma.niveau || 'Non spécifié'}</p>
+                                <p><strong>Année:</strong> ${diploma.annee_obtention || 'Non spécifiée'}</p>
+                                <p><strong>Établissement:</strong> ${diploma.etablissement || 'Non spécifié'}</p>
+                                <a href="/uploads/documents/${fileName}" target="_blank" class="view-doc">
+                                    <i class="fas fa-file-pdf"></i> Voir le diplôme
+                                </a>
+                            `;
+                            diplomasList.appendChild(diplomaItem);
+                        });
+                    } else {
+                        diplomasList.innerHTML = '<p>Aucun diplôme fourni</p>';
+                    }
 
                     // Remplir les informations de paiement
                     const paymentInfo = document.getElementById('paymentInfo');
-                    paymentInfo.innerHTML = `
-                        <p><strong>Montant:</strong> ${data.paiement.montant} FCFA</p>
-                        <p><strong>Mode de paiement:</strong> ${data.paiement.mode_paiement}</p>
-                        <p><strong>Date:</strong> ${data.paiement.date_paiement}</p>
-                        <span class="payment-status status-${data.paiement.statut}">
-                            ${data.paiement.statut === 'valide' ? 'Validé' : 
-                              data.paiement.statut === 'en_attente' ? 'En attente' : 'Échoué'}
-                        </span>
-                    `;
+                    if (data.paiement) {
+                        paymentInfo.innerHTML = `
+                            <p><strong>Montant:</strong> ${data.paiement.montant || 0} FCFA</p>
+                            <p><strong>Mode de paiement:</strong> ${data.paiement.mode_paiement || 'Non spécifié'}</p>
+                            <p><strong>Date:</strong> ${data.paiement.date_paiement || 'Non spécifiée'}</p>
+                            <span class="payment-status status-${data.paiement.statut || 'en_attente'}">
+                                ${data.paiement.statut === 'valide' ? 'Validé' : 
+                                  data.paiement.statut === 'en_attente' ? 'En attente' : 'Échoué'}
+                            </span>
+                        `;
+                    } else {
+                        paymentInfo.innerHTML = '<p>Aucune information de paiement disponible</p>';
+                    }
 
                     // Mettre à jour les boutons d'action
                     const validationActions = document.querySelector('.validation-actions');
@@ -3500,7 +3498,7 @@ try {
                 })
                 .catch(error => {
                     console.error('Erreur:', error);
-                    showNotification('Erreur lors du chargement des détails du candidat', 'error');
+                    showNotification(error.message || 'Erreur lors du chargement des détails du candidat', 'error');
                 });
         }
 

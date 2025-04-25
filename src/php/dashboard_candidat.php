@@ -20,7 +20,7 @@ $stmt = $conn->prepare("
 ");
 $stmt->execute([$_SESSION['user_id']]);
 $photo = $stmt->fetch(PDO::FETCH_ASSOC);
-$photo_url = $photo ? '../../' . $photo['fichier_url'] : '../../assets/images/profile.png';
+$photo_url = $photo ? '/uploads/documents/' . basename($photo['fichier_url']) : '/assets/images/profile.png';
 
 // Récupérer les informations du candidat
 $stmt = $conn->prepare("
@@ -98,7 +98,8 @@ $stmt = $conn->prepare("
         ce.ville as centre_ville,
         ce.lieu as centre_lieu,
         ce.capacite as centre_capacite,
-        r.decision as resultat
+        r.decision as resultat,
+        r.note as note_resultat
     FROM INSCRIPTION i
     JOIN SESSION_CONCOURS sc ON i.session_id = sc.id
     JOIN CONCOURS c ON sc.concours_id = c.id
@@ -373,6 +374,12 @@ $user_name = $_SESSION['user_name'];
                                                         <i class="fas fa-check-circle" style="margin-right: 5px; color: #666;"></i>
                                                         Résultat: <?php echo ucfirst($inscription['resultat']); ?>
                                                     </p>
+                                                    <?php if ($inscription['note_resultat'] !== null): ?>
+                                                        <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9em;">
+                                                            <i class="fas fa-star" style="margin-right: 5px; color: #f1c40f;"></i>
+                                                            Note: <?php echo number_format($inscription['note_resultat'], 2); ?>
+                                                        </p>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         <?php endif; ?>
@@ -1070,13 +1077,13 @@ $user_name = $_SESSION['user_name'];
                                         </p>
                                     </div>
                                     <div class="document-actions">
-                                        <a href="<?php echo '../../' . htmlspecialchars($document['fichier_url']); ?>" 
+                                        <a href="<?php echo '/uploads/documents/' . htmlspecialchars(basename($document['fichier_url'])); ?>" 
                                            target="_blank" 
                                            class="view-btn" 
                                            title="Voir le document">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="<?php echo '../../' . htmlspecialchars($document['fichier_url']); ?>" 
+                                        <a href="<?php echo '/uploads/documents/' . htmlspecialchars(basename($document['fichier_url'])); ?>" 
                                            download 
                                            class="download-btn" 
                                            title="Télécharger">
@@ -1385,13 +1392,13 @@ $user_name = $_SESSION['user_name'];
                                     </div>
                                     <div class="diploma-actions">
                                         <?php if ($diplome['scan_url']): ?>
-                                            <a href="<?php echo '../../' . htmlspecialchars($diplome['scan_url']); ?>" 
+                                            <a href="<?php echo '/uploads/documents/' . htmlspecialchars(basename($diplome['scan_url'])); ?>" 
                                                target="_blank" 
                                                class="view-btn" 
                                                title="Voir le diplôme">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="<?php echo '../../' . htmlspecialchars($diplome['scan_url']); ?>" 
+                                            <a href="<?php echo '/uploads/documents/' . htmlspecialchars(basename($diplome['scan_url'])); ?>" 
                                                download 
                                                class="download-btn" 
                                                title="Télécharger">

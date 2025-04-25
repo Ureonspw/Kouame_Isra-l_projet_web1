@@ -710,6 +710,689 @@ $user_email = $_SESSION['user_email'];
             justify-content: center;
         }
     }
+
+    /* Styles pour la section sessions */
+    .sessions-section {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .sessions-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .session-card {
+        background: #f8f9fc;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e3e6f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .session-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, #4e73df, #224abe);
+    }
+
+    .session-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .session-card h4 {
+        margin: 0 0 10px 0;
+        color: #5a5c69;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .session-card h4 i {
+        color: #4e73df;
+        font-size: 18px;
+    }
+
+    .session-card p {
+        margin: 5px 0;
+        color: #6e707e;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .session-card p i {
+        color: #858796;
+        font-size: 14px;
+        min-width: 16px;
+    }
+
+    .session-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: #e3fcef;
+        color: #1cc88a;
+    }
+
+    .status-closed {
+        background: #fce3e3;
+        color: #e74a3b;
+    }
+
+    .status-upcoming {
+        background: #e3e3fc;
+        color: #4e73df;
+    }
+
+    @media (max-width: 768px) {
+        .sessions-list {
+            grid-template-columns: 1fr;
+        }
+        
+        .session-card {
+            padding: 15px;
+        }
+    }
+
+    /* Styles pour la section centres */
+    .centres-section {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .centres-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .centre-card {
+        background: #f8f9fc;
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid #e3e6f0;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .centre-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(to bottom, #4e73df, #224abe);
+    }
+
+    .centre-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .centre-card h4 {
+        margin: 0 0 10px 0;
+        color: #5a5c69;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .centre-card h4 i {
+        color: #4e73df;
+        font-size: 18px;
+    }
+
+    .centre-card p {
+        margin: 5px 0;
+        color: #6e707e;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .centre-card p i {
+        color: #858796;
+        font-size: 14px;
+        min-width: 16px;
+    }
+
+    /* Styles pour le modal des centres */
+    #centreModal .modal-content {
+        max-width: 600px;
+        width: 90%;
+    }
+
+    #centreModal .form-group {
+        margin-bottom: 20px;
+    }
+
+    #centreModal .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #5a5c69;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #centreModal .form-group label i {
+        color: #4e73df;
+        font-size: 16px;
+    }
+
+    #centreModal .form-group input,
+    #centreModal .form-group select {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #d1d3e2;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background-color: #f8f9fc;
+    }
+
+    #centreModal .form-group input:focus,
+    #centreModal .form-group select:focus {
+        outline: none;
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .centres-list {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .centres-list {
+            grid-template-columns: 1fr;
+        }
+        
+        .centres-section {
+            padding: 20px;
+        }
+        
+        .centre-card {
+            padding: 15px;
+        }
+        
+        .centre-card h4 {
+            font-size: 15px;
+        }
+        
+        .centre-card p {
+            font-size: 13px;
+        }
+        
+        #centreModal .modal-content {
+            width: 95%;
+            margin: 20px auto;
+        }
+        
+        #centreModal .form-group input,
+        #centreModal .form-group select {
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .centres-section {
+            padding: 15px;
+        }
+        
+        .centre-card {
+            padding: 12px;
+        }
+        
+        .centre-card h4 {
+            font-size: 14px;
+        }
+        
+        .centre-card p {
+            font-size: 12px;
+        }
+        
+        #centreModal .modal-content {
+            width: 100%;
+            margin: 10px;
+        }
+        
+        #centreModal .form-group {
+            margin-bottom: 15px;
+        }
+    }
+
+    /* Styles pour la section validation */
+    .validation-filters {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 15px;
+    }
+
+    .filter-group select {
+        padding: 10px 15px;
+        border: 1px solid #d1d3e2;
+        border-radius: 8px;
+        background-color: #f8f9fc;
+        font-size: 14px;
+        min-width: 200px;
+    }
+
+    .candidates-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .candidate-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 4px solid #4e73df;
+    }
+
+    .candidate-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .candidate-card h4 {
+        color: #4e73df;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .candidate-card p {
+        color: #5a5c69;
+        margin: 8px 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .candidate-card i {
+        color: #858796;
+        width: 20px;
+        text-align: center;
+    }
+
+    .candidate-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 10px;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-validated {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .candidate-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .view-btn {
+        background: #4e73df;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .view-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Styles pour le modal */
+    .candidate-details {
+        display: grid;
+        gap: 30px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-top: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .info-item label {
+        color: #6e707e;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .info-item span {
+        color: #5a5c69;
+        font-size: 15px;
+    }
+
+    .documents-list, .diplomas-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .document-item, .diploma-item {
+        background: #f8f9fc;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e3e6f0;
+    }
+
+    .document-item h5, .diploma-item h5 {
+        color: #4e73df;
+        margin-bottom: 10px;
+    }
+
+    .document-item p, .diploma-item p {
+        color: #5a5c69;
+        font-size: 14px;
+        margin: 5px 0;
+    }
+
+    .payment-info {
+        background: #f8f9fc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 15px;
+    }
+
+    .payment-status {
+        display: inline-block;
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 14px;
+        font-weight: 600;
+        margin-top: 10px;
+    }
+
+    .validation-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+        justify-content: flex-end;
+    }
+
+    .validate-btn {
+        background: #1cc88a;
+        color: white;
+    }
+
+    .reject-btn {
+        background: #e74a3b;
+        color: white;
+    }
+
+    @media (max-width: 768px) {
+        .validation-filters {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-group {
+            flex-direction: column;
+        }
+
+        .filter-group select {
+            width: 100%;
+        }
+
+        .candidates-list {
+            grid-template-columns: 1fr;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .validation-actions {
+            flex-direction: column;
+        }
+
+        .validate-btn, .reject-btn {
+            width: 100%;
+        }
+    }
+
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 1000;
+        animation: slideIn 0.3s ease-out;
+    }
+    
+    .notification.success {
+        background-color: #28a745;
+    }
+    
+    .notification.error {
+        background-color: #dc3545;
+    }
+    
+    .notification.info {
+        background-color: #17a2b8;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Styles pour la section convocations */
+    .convocation-form {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .convocation-form .form-group {
+        margin-bottom: 20px;
+    }
+
+    .convocation-form label {
+        display: block;
+        margin-bottom: 8px;
+        color: #5a5c69;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .convocation-form label i {
+        color: #4e73df;
+        font-size: 16px;
+    }
+
+    .convocation-form input,
+    .convocation-form select,
+    .convocation-form textarea {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #d1d3e2;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        background-color: #f8f9fc;
+    }
+
+    .convocation-form input:focus,
+    .convocation-form select:focus,
+    .convocation-form textarea:focus {
+        outline: none;
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+    }
+
+    .convocation-form .form-actions {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+    }
+
+    .convocation-form .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .convocation-form .btn-primary {
+        background: #4e73df;
+        color: white;
+        border: none;
+    }
+
+    .convocation-form .btn-success {
+        background: #1cc88a;
+        color: white;
+        border: none;
+    }
+
+    .convocation-form .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .convocation-form .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .pdf-preview {
+        background: #fff;
+        border-radius: 15px;
+        padding: 25px;
+        margin-top: 30px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+    .pdf-preview h3 {
+        color: #5a5c69;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .pdf-preview h3 i {
+        color: #4e73df;
+    }
+
+    @media (max-width: 768px) {
+        .convocation-form {
+            padding: 20px;
+        }
+        
+        .convocation-form .form-actions {
+            flex-direction: column;
+        }
+        
+        .convocation-form .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
     </style>
 </head>
 
@@ -826,7 +1509,7 @@ $user_email = $_SESSION['user_email'];
                         <li data-section="candidate-files">
                             <a href="#">
                                 <i class="fas fa-folder"></i>
-                                <span>Dossiers candidats</span>
+                                <span>Convocations</span>
                             </a>
                         </li>
                         <li data-section="validation">
@@ -1152,9 +1835,116 @@ $user_email = $_SESSION['user_email'];
             <section id="manage-contests" class="content-section">
                 <div class="section-content">
                     <h2>Gérer les concours</h2>
-                    <!-- Le contenu sera ajouté ultérieurement -->
+                    
+                    <!-- Sessions Section -->
+                    <div class="sessions-section">
+                        <div class="section-header">
+                            <h3>Sessions de Concours</h3>
+                            <button class="add-btn" id="addSessionBtn">
+                                <i class="fas fa-plus"></i> Nouvelle Session
+                            </button>
+                        </div>
+                        
+                        <div class="sessions-list" id="sessionsList">
+                            <!-- Les sessions seront chargées dynamiquement -->
+                        </div>
+                    </div>
+
+                    <!-- Centres Section -->
+                    <div class="centres-section">
+                        <div class="section-header">
+                            <h3>Centres d'Examen</h3>
+                            <button class="add-btn" id="addCentreBtn">
+                                <i class="fas fa-plus"></i> Nouveau Centre
+                            </button>
+                        </div>
+                        
+                        <div class="centres-list" id="centresList">
+                            <!-- Les centres seront chargés dynamiquement -->
+                        </div>
+                    </div>
                 </div>
             </section>
+
+            <!-- Session Modal -->
+            <div class="modal" id="sessionModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-calendar-plus"></i> Nouvelle Session</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="sessionForm">
+                            <div class="form-group">
+                                <label for="sessionConcours"><i class="fas fa-trophy"></i> Concours</label>
+                                <select id="sessionConcours" name="concours_id" required>
+                                    <option value="">Sélectionnez un concours</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sessionDateOuverture"><i class="fas fa-calendar-check"></i> Date d'ouverture</label>
+                                <input type="date" id="sessionDateOuverture" name="date_ouverture" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sessionDateCloture"><i class="fas fa-calendar-times"></i> Date de clôture</label>
+                                <input type="date" id="sessionDateCloture" name="date_cloture" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sessionPlaces"><i class="fas fa-users"></i> Nombre de places</label>
+                                <input type="number" id="sessionPlaces" name="nb_places" min="1" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="submit-btn">
+                                    <i class="fas fa-save"></i> Enregistrer
+                                </button>
+                                <button type="button" class="cancel-btn">
+                                    <i class="fas fa-times"></i> Annuler
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Centre Modal -->
+            <div class="modal" id="centreModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3><i class="fas fa-building"></i> Nouveau Centre</h3>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="centreForm">
+                            <div class="form-group">
+                                <label for="centreSession"><i class="fas fa-calendar-alt"></i> Session</label>
+                                <select id="centreSession" name="session_id" required>
+                                    <option value="">Sélectionnez une session</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="centreVille"><i class="fas fa-map-marker-alt"></i> Ville</label>
+                                <input type="text" id="centreVille" name="ville" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="centreLieu"><i class="fas fa-map"></i> Lieu</label>
+                                <input type="text" id="centreLieu" name="lieu" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="centreCapacite"><i class="fas fa-users"></i> Capacité</label>
+                                <input type="number" id="centreCapacite" name="capacite" min="1" required>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="submit-btn">
+                                    <i class="fas fa-save"></i> Enregistrer
+                                </button>
+                                <button type="button" class="cancel-btn">
+                                    <i class="fas fa-times"></i> Annuler
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
             <!-- Applications Section -->
             <section id="applications" class="content-section">
@@ -1167,8 +1957,52 @@ $user_email = $_SESSION['user_email'];
             <!-- Candidate Files Section -->
             <section id="candidate-files" class="content-section">
                 <div class="section-content">
-                    <h2>Dossiers candidats</h2>
-                    <!-- Add candidate files content here -->
+                    <h2>Convocations</h2>
+                    
+                    <!-- Interface de génération de convocation -->
+                    <div class="convocation-form">
+                        <div class="form-group">
+                            <label for="candidateSelect">Sélectionner un candidat validé</label>
+                            <select id="candidateSelect" class="form-control">
+                                <option value="">Chargement des candidats...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="examDate">Date de l'examen</label>
+                            <input type="datetime-local" id="examDate" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="examLocation">Lieu de l'examen</label>
+                            <input type="text" id="examLocation" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="examDuration">Durée de l'examen (en minutes)</label>
+                            <input type="number" id="examDuration" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="examInstructions">Instructions spéciales</label>
+                            <textarea id="examInstructions" class="form-control" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button id="generateConvocation" class="btn btn-primary">
+                                <i class="fas fa-file-pdf"></i> Générer la convocation
+                            </button>
+                            <button id="saveConvocation" class="btn btn-success" disabled>
+                                <i class="fas fa-save"></i> Enregistrer la convocation
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Aperçu du PDF -->
+                    <div id="pdfPreview" class="pdf-preview" style="display: none;">
+                        <h3>Aperçu de la convocation</h3>
+                        <iframe id="pdfViewer" width="100%" height="600px"></iframe>
+                    </div>
                 </div>
             </section>
 
@@ -1176,7 +2010,102 @@ $user_email = $_SESSION['user_email'];
             <section id="validation" class="content-section">
                 <div class="section-content">
                     <h2>Validation des dossiers</h2>
-                    <!-- Add validation content here -->
+                    
+                    <!-- Filtres de recherche -->
+                    <div class="validation-filters">
+                        <div class="search-box">
+                            <input type="text" id="candidateSearch" placeholder="Rechercher un candidat...">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="filter-group">
+                            <select id="sessionFilter">
+                                <option value="">Toutes les sessions</option>
+                            </select>
+                            <select id="statusFilter">
+                                <option value="en_attente">En attente</option>
+                                <option value="valide">Validés</option>
+                                <option value="rejete">Rejetés</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Liste des candidats -->
+                    <div class="candidates-list" id="candidatesList">
+                        <!-- Les candidats seront chargés dynamiquement ici -->
+                    </div>
+
+                    <!-- Modal pour voir les détails -->
+                    <div class="modal" id="candidateModal">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3><i class="fas fa-user-graduate"></i> Détails du candidat</h3>
+                                <button class="close-modal">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="candidate-details">
+                                    <div class="personal-info">
+                                        <h4>Informations personnelles</h4>
+                                        <div class="info-grid">
+                                            <div class="info-item">
+                                                <label>Nom complet:</label>
+                                                <span id="candidateName"></span>
+                                            </div>
+                                            <div class="info-item">
+                                                <label>Date de naissance:</label>
+                                                <span id="candidateBirthDate"></span>
+                                            </div>
+                                            <div class="info-item">
+                                                <label>Nationalité:</label>
+                                                <span id="candidateNationality"></span>
+                                            </div>
+                                            <div class="info-item">
+                                                <label>Numéro de pièce:</label>
+                                                <span id="candidateIdNumber"></span>
+                                            </div>
+                                            <div class="info-item">
+                                                <label>Téléphone:</label>
+                                                <span id="candidatePhone"></span>
+                                            </div>
+                                            <div class="info-item">
+                                                <label>Adresse:</label>
+                                                <span id="candidateAddress"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="documents-section">
+                                        <h4>Documents fournis</h4>
+                                        <div class="documents-list" id="documentsList">
+                                            <!-- Les documents seront chargés dynamiquement ici -->
+                                        </div>
+                                    </div>
+
+                                    <div class="diplomas-section">
+                                        <h4>Diplômes</h4>
+                                        <div class="diplomas-list" id="diplomasList">
+                                            <!-- Les diplômes seront chargés dynamiquement ici -->
+                                        </div>
+                                    </div>
+
+                                    <div class="payment-section">
+                                        <h4>État du paiement</h4>
+                                        <div class="payment-info" id="paymentInfo">
+                                            <!-- Les informations de paiement seront chargées dynamiquement ici -->
+                                        </div>
+                                    </div>
+
+                                    <div class="validation-actions">
+                                        <button class="action-btn validate-btn" id="validateBtn">
+                                            <i class="fas fa-check"></i> Valider
+                                        </button>
+                                        <button class="action-btn reject-btn" id="rejectBtn">
+                                            <i class="fas fa-times"></i> Rejeter
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -1488,6 +2417,8 @@ $user_email = $_SESSION['user_email'];
             loadUsers();
             loadDomaines();
             loadConcours();
+            loadSessions();
+            loadCentres(); // Ajout du chargement des centres
         });
 
         // Fonction pour charger les domaines
@@ -1555,7 +2486,12 @@ $user_email = $_SESSION['user_email'];
         // Fonction pour charger les domaines dans le select
         function loadDomainesSelect() {
             fetch('get_domaines.php')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors du chargement des domaines');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const select = document.getElementById('concoursDomaine');
                     select.innerHTML = '<option value="">Sélectionnez un domaine</option>';
@@ -1567,7 +2503,36 @@ $user_email = $_SESSION['user_email'];
                         select.appendChild(option);
                     });
                 })
-                .catch(error => console.error('Erreur:', error));
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors du chargement des domaines: ' + error.message);
+                });
+        }
+
+        // Fonction pour charger les concours dans le select
+        function loadConcoursSelect() {
+            fetch('list_concours.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors du chargement des concours');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const select = document.getElementById('sessionConcours');
+                    select.innerHTML = '<option value="">Sélectionnez un concours</option>';
+                    
+                    data.forEach(concours => {
+                        const option = document.createElement('option');
+                        option.value = concours.id;
+                        option.textContent = concours.nom;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors du chargement des concours: ' + error.message);
+                });
         }
 
         // Gestion des modals
@@ -1741,6 +2706,773 @@ $user_email = $_SESSION['user_email'];
                 .catch(error => console.error('Erreur:', error));
             }
         }
+
+        // Fonction pour charger les sessions
+        function loadSessions() {
+            fetch('get_sessions.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors du chargement des sessions');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const sessionsList = document.getElementById('sessionsList');
+                    sessionsList.innerHTML = '';
+                    
+                    data.forEach(session => {
+                        const status = getSessionStatus(session.date_ouverture, session.date_cloture);
+                        const card = document.createElement('div');
+                        card.className = 'session-card';
+                        card.innerHTML = `
+                            <span class="session-status ${status.class}">${status.text}</span>
+                            <h4><i class="fas fa-calendar-alt"></i>${session.concours_nom}</h4>
+                            <p><i class="fas fa-calendar-check"></i><strong>Ouverture:</strong> ${formatDate(session.date_ouverture)}</p>
+                            <p><i class="fas fa-calendar-times"></i><strong>Clôture:</strong> ${formatDate(session.date_cloture)}</p>
+                            <p><i class="fas fa-users"></i><strong>Places:</strong> ${session.nb_places}</p>
+                            <div class="card-actions">
+                                <button class="action-btn edit-btn" onclick="editSession(${session.id})">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteSession(${session.id})">
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </button>
+                            </div>
+                        `;
+                        sessionsList.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors du chargement des sessions: ' + error.message);
+                });
+        }
+
+        // Fonction pour déterminer le statut d'une session
+        function getSessionStatus(dateOuverture, dateCloture) {
+            const today = new Date();
+            const ouverture = new Date(dateOuverture);
+            const cloture = new Date(dateCloture);
+            
+            if (today < ouverture) {
+                return { class: 'status-upcoming', text: 'À venir' };
+            } else if (today > cloture) {
+                return { class: 'status-closed', text: 'Clôturé' };
+            } else {
+                return { class: 'status-active', text: 'Actif' };
+            }
+        }
+
+        // Fonction pour formater la date
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('fr-FR', options);
+        }
+
+        // Fonction pour charger les sessions dans le select
+        function loadSessionsSelect() {
+            fetch('get_sessions.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors du chargement des sessions');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const select = document.getElementById('centreSession');
+                    select.innerHTML = '<option value="">Sélectionnez une session</option>';
+                    
+                    data.forEach(session => {
+                        const option = document.createElement('option');
+                        option.value = session.id;
+                        option.textContent = `${session.concours_nom} (${formatDate(session.date_ouverture)} - ${formatDate(session.date_cloture)})`;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert('Erreur lors du chargement des sessions: ' + error.message);
+                });
+        }
+
+        // Gestion du modal
+        document.getElementById('addSessionBtn').addEventListener('click', () => {
+            loadConcoursSelect();
+            document.getElementById('sessionModal').style.display = 'block';
+            document.querySelector('#sessionModal h3').innerHTML = '<i class="fas fa-calendar-plus"></i> Nouvelle Session';
+            document.getElementById('sessionForm').reset();
+        });
+
+        // Fonction pour éditer une session
+        function editSession(id) {
+            fetch('get_session.php?id=' + id)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la récupération des données');
+                    }
+                    return response.json();
+                })
+                .then(session => {
+                    const form = document.getElementById('sessionForm');
+                    form.querySelector('#sessionConcours').value = session.concours_id;
+                    form.querySelector('#sessionDateOuverture').value = session.date_ouverture;
+                    form.querySelector('#sessionDateCloture').value = session.date_cloture;
+                    form.querySelector('#sessionPlaces').value = session.nb_places;
+                    
+                    // Ajouter ou mettre à jour le champ ID caché
+                    let idInput = form.querySelector('input[name="id"]');
+                    if (!idInput) {
+                        idInput = document.createElement('input');
+                        idInput.type = 'hidden';
+                        idInput.name = 'id';
+                        form.appendChild(idInput);
+                    }
+                    idInput.value = id;
+                    
+                    document.querySelector('#sessionModal h3').innerHTML = '<i class="fas fa-edit"></i> Modifier la Session';
+                    document.getElementById('sessionModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert(error.message);
+                });
+        }
+
+        // Gestion du formulaire
+        document.getElementById('sessionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const sessionId = formData.get('id');
+            
+            // Vérifier que les dates sont valides
+            const dateOuverture = new Date(formData.get('date_ouverture'));
+            const dateCloture = new Date(formData.get('date_cloture'));
+            
+            if (dateCloture <= dateOuverture) {
+                alert('La date de clôture doit être postérieure à la date d\'ouverture');
+                return;
+            }
+            
+            // Déterminer l'URL en fonction de l'existence d'un ID
+            const url = sessionId ? 'update_session.php' : 'create_session.php';
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Erreur lors de l\'enregistrement');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    loadSessions();
+                    document.getElementById('sessionModal').style.display = 'none';
+                    this.reset();
+                    const idInput = this.querySelector('input[name="id"]');
+                    if (idInput) idInput.remove();
+                } else {
+                    throw new Error(data.error || 'Une erreur est survenue');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert(error.message);
+            });
+        });
+
+        // Fonction pour supprimer une session
+        function deleteSession(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer cette session ?')) {
+                const formData = new FormData();
+                formData.append('id', id);
+                
+                fetch('delete_session.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.error || 'Erreur lors de la suppression');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        loadSessions();
+                    } else {
+                        throw new Error(data.error || 'Une erreur est survenue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert(error.message);
+                });
+            }
+        }
+
+        // Fonction pour charger les centres
+        function loadCentres() {
+            fetch('get_centres.php')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors du chargement des centres');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const centresList = document.getElementById('centresList');
+                    centresList.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        centresList.innerHTML = '<div class="no-data">Aucun centre d\'examen trouvé</div>';
+                        return;
+                    }
+                    
+                    data.forEach(centre => {
+                        const card = document.createElement('div');
+                        card.className = 'centre-card';
+                        card.innerHTML = `
+                            <h4><i class="fas fa-building"></i>${centre.ville}</h4>
+                            <p><i class="fas fa-map"></i><strong>Lieu:</strong> ${centre.lieu}</p>
+                            <p><i class="fas fa-users"></i><strong>Capacité:</strong> ${centre.capacite}</p>
+                            <p><i class="fas fa-calendar-alt"></i><strong>Session:</strong> ${centre.concours_nom}</p>
+                            <div class="card-actions">
+                                <button class="action-btn edit-btn" onclick="editCentre(${centre.id})">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteCentre(${centre.id})">
+                                    <i class="fas fa-trash"></i> Supprimer
+                                </button>
+                            </div>
+                        `;
+                        centresList.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    const centresList = document.getElementById('centresList');
+                    centresList.innerHTML = '<div class="error-message">Erreur lors du chargement des centres: ' + error.message + '</div>';
+                });
+        }
+
+        // Gestion du modal
+        document.getElementById('addCentreBtn').addEventListener('click', () => {
+            loadSessionsSelect();
+            document.getElementById('centreModal').style.display = 'block';
+            document.querySelector('#centreModal h3').innerHTML = '<i class="fas fa-building"></i> Nouveau Centre';
+            document.getElementById('centreForm').reset();
+        });
+
+        // Fonction pour éditer un centre
+        function editCentre(id) {
+            fetch('get_centre.php?id=' + id)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la récupération des données');
+                    }
+                    return response.json();
+                })
+                .then(centre => {
+                    const form = document.getElementById('centreForm');
+                    form.querySelector('#centreSession').value = centre.session_id;
+                    form.querySelector('#centreVille').value = centre.ville;
+                    form.querySelector('#centreLieu').value = centre.lieu;
+                    form.querySelector('#centreCapacite').value = centre.capacite;
+                    
+                    // Ajouter ou mettre à jour le champ ID caché
+                    let idInput = form.querySelector('input[name="id"]');
+                    if (!idInput) {
+                        idInput = document.createElement('input');
+                        idInput.type = 'hidden';
+                        idInput.name = 'id';
+                        form.appendChild(idInput);
+                    }
+                    idInput.value = id;
+                    
+                    document.querySelector('#centreModal h3').innerHTML = '<i class="fas fa-edit"></i> Modifier le Centre';
+                    document.getElementById('centreModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert(error.message);
+                });
+        }
+
+        // Gestion du formulaire
+        document.getElementById('centreForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const centreId = formData.get('id');
+            
+            fetch(centreId ? 'update_centre.php' : 'create_centre.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Erreur lors de l\'enregistrement');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    loadCentres();
+                    document.getElementById('centreModal').style.display = 'none';
+                    this.reset();
+                    const idInput = this.querySelector('input[name="id"]');
+                    if (idInput) idInput.remove();
+                } else {
+                    throw new Error(data.error || 'Une erreur est survenue');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert(error.message);
+            });
+        });
+
+        // Fonction pour supprimer un centre
+        function deleteCentre(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce centre ?')) {
+                const formData = new FormData();
+                formData.append('id', id);
+                
+                fetch('delete_centre.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(data => {
+                            throw new Error(data.error || 'Erreur lors de la suppression');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        loadCentres();
+                    } else {
+                        throw new Error(data.error || 'Une erreur est survenue');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert(error.message);
+                });
+            }
+        }
+
+        // Fonction pour charger les candidats
+        function loadCandidates() {
+            fetch('get_candidates.php')
+                .then(response => response.json())
+                .then(data => {
+                    const candidatesList = document.getElementById('candidatesList');
+                    candidatesList.innerHTML = '';
+                    
+                    data.forEach(candidate => {
+                        const card = document.createElement('div');
+                        card.className = 'candidate-card';
+                        card.innerHTML = `
+                            <h4><i class="fas fa-user"></i>${candidate.nom} ${candidate.prenoms}</h4>
+                            <p><i class="fas fa-envelope"></i>${candidate.email}</p>
+                            <p><i class="fas fa-phone"></i>${candidate.telephone_principal}</p>
+                            <p><i class="fas fa-id-card"></i>${candidate.num_piece}</p>
+                            
+                            <div class="candidate-info">
+                                <h5><i class="fas fa-calendar-alt"></i> Session</h5>
+                                <p>Du ${formatDate(candidate.session.date_ouverture)} au ${formatDate(candidate.session.date_cloture)}</p>
+                                
+                                <h5><i class="fas fa-trophy"></i> Concours</h5>
+                                <p>${candidate.concours.nom}</p>
+                                <p><strong>Niveau requis:</strong> ${candidate.concours.niveau_requis}</p>
+                                <p><strong>Catégorie:</strong> ${candidate.concours.categorie}</p>
+                                <p><strong>Ministère:</strong> ${candidate.concours.ministere}</p>
+                                
+                                <h5><i class="fas fa-folder"></i> Domaine</h5>
+                                <p>${candidate.concours.domaine.nom}</p>
+                            </div>
+                            
+                            <span class="candidate-status status-${candidate.statut}">
+                                ${candidate.statut === 'en_attente' ? 'En attente' : 
+                                  candidate.statut === 'valide' ? 'Validé' : 'Rejeté'}
+                            </span>
+                            <div class="candidate-actions">
+                                <button class="view-btn" onclick="viewCandidateDetails(${candidate.id})">
+                                    <i class="fas fa-eye"></i> Voir détails
+                                </button>
+                            </div>
+                        `;
+                        candidatesList.appendChild(card);
+                    });
+                })
+                .catch(error => console.error('Erreur:', error));
+        }
+
+        // Fonction pour valider un candidat
+        function validateCandidate(candidateId) {
+            if (confirm('Êtes-vous sûr de vouloir valider ce candidat ?')) {
+                fetch('validate_candidate.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ candidate_id: candidateId })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur réseau');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Candidat validé avec succès', 'success');
+                        loadCandidates();
+                        document.getElementById('candidateModal').style.display = 'none';
+                    } else {
+                        throw new Error(data.error || 'Erreur lors de la validation');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showNotification(error.message, 'error');
+                });
+            }
+        }
+
+        // Fonction pour rejeter un candidat
+        function rejectCandidate(candidateId) {
+            if (confirm('Êtes-vous sûr de vouloir rejeter ce candidat ?')) {
+                fetch('reject_candidate.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ candidate_id: candidateId })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur réseau');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Candidat rejeté avec succès', 'success');
+                        loadCandidates();
+                        document.getElementById('candidateModal').style.display = 'none';
+                    } else {
+                        throw new Error(data.error || 'Erreur lors du rejet');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showNotification(error.message, 'error');
+                });
+            }
+        }
+
+        // Fonction pour voir les détails d'un candidat
+        function viewCandidateDetails(candidateId) {
+            fetch(`get_candidate_details.php?id=${candidateId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Remplir les informations personnelles
+                    document.getElementById('candidateName').textContent = `${data.nom} ${data.prenoms}`;
+                    document.getElementById('candidateBirthDate').textContent = data.date_naissance;
+                    document.getElementById('candidateNationality').textContent = data.nationalite;
+                    document.getElementById('candidateIdNumber').textContent = data.num_piece;
+                    document.getElementById('candidatePhone').textContent = data.telephone_principal;
+                    document.getElementById('candidateAddress').textContent = data.adresse_postale;
+
+                    // Remplir les documents
+                    const documentsList = document.getElementById('documentsList');
+                    documentsList.innerHTML = '';
+                    data.documents.forEach(doc => {
+                        const docItem = document.createElement('div');
+                        docItem.className = 'document-item';
+                        docItem.innerHTML = `
+                            <h5>${doc.type_document}</h5>
+                            <a href="/${doc.fichier_url}" target="_blank" class="view-doc">
+                                <i class="fas fa-file-pdf"></i> Voir le document
+                            </a>
+                        `;
+                        documentsList.appendChild(docItem);
+                    });
+
+                    // Remplir les diplômes
+                    const diplomasList = document.getElementById('diplomasList');
+                    diplomasList.innerHTML = '';
+                    data.diplomes.forEach(diploma => {
+                        const diplomaItem = document.createElement('div');
+                        diplomaItem.className = 'diploma-item';
+                        diplomaItem.innerHTML = `
+                            <h5>${diploma.nom}</h5>
+                            <p><strong>Niveau:</strong> ${diploma.niveau}</p>
+                            <p><strong>Année:</strong> ${diploma.annee_obtention}</p>
+                            <p><strong>Établissement:</strong> ${diploma.etablissement}</p>
+                            <a href="/${diploma.scan_url}" target="_blank" class="view-doc">
+                                <i class="fas fa-file-pdf"></i> Voir le diplôme
+                            </a>
+                        `;
+                        diplomasList.appendChild(diplomaItem);
+                    });
+
+                    // Remplir les informations de paiement
+                    const paymentInfo = document.getElementById('paymentInfo');
+                    paymentInfo.innerHTML = `
+                        <p><strong>Montant:</strong> ${data.paiement.montant} FCFA</p>
+                        <p><strong>Mode de paiement:</strong> ${data.paiement.mode_paiement}</p>
+                        <p><strong>Date:</strong> ${data.paiement.date_paiement}</p>
+                        <span class="payment-status status-${data.paiement.statut}">
+                            ${data.paiement.statut === 'valide' ? 'Validé' : 
+                              data.paiement.statut === 'en_attente' ? 'En attente' : 'Échoué'}
+                        </span>
+                    `;
+
+                    // Mettre à jour les boutons d'action
+                    const validationActions = document.querySelector('.validation-actions');
+                    validationActions.innerHTML = '';
+                    
+                    if (data.statut === 'en_attente') {
+                        validationActions.innerHTML = `
+                            <button class="action-btn validate-btn" onclick="validateCandidate(${candidateId})">
+                                <i class="fas fa-check"></i> Valider
+                            </button>
+                            <button class="action-btn reject-btn" onclick="rejectCandidate(${candidateId})">
+                                <i class="fas fa-times"></i> Rejeter
+                            </button>
+                        `;
+                    } else {
+                        validationActions.innerHTML = `
+                            <p class="status-message">
+                                Ce candidat a déjà été ${data.statut === 'valide' ? 'validé' : 'rejeté'}
+                            </p>
+                        `;
+                    }
+
+                    // Afficher le modal
+                    document.getElementById('candidateModal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showNotification('Erreur lors du chargement des détails du candidat', 'error');
+                });
+        }
+
+        // Fonction pour afficher les notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Supprimer la notification après 3 secondes
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Ajouter les styles pour les notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 5px;
+                color: white;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 1000;
+                animation: slideIn 0.3s ease-out;
+            }
+            
+            .notification.success {
+                background-color: #28a745;
+            }
+            
+            .notification.error {
+                background-color: #dc3545;
+            }
+            
+            .notification.info {
+                background-color: #17a2b8;
+            }
+            
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Gestion des filtres
+        document.getElementById('candidateSearch').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.candidate-card');
+            
+            cards.forEach(card => {
+                const name = card.querySelector('h4').textContent.toLowerCase();
+                const email = card.querySelector('p').textContent.toLowerCase();
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        document.getElementById('statusFilter').addEventListener('change', function(e) {
+            const status = e.target.value;
+            const cards = document.querySelectorAll('.candidate-card');
+            
+            cards.forEach(card => {
+                const cardStatus = card.querySelector('.candidate-status').className.includes(status);
+                if (status === '' || cardStatus) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // Charger les données au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCandidates();
+        });
+
+        // Fonction pour charger les candidats validés
+        function loadValidatedCandidates() {
+            fetch('get_validated_candidates.php')
+                .then(response => response.json())
+                .then(data => {
+                    const select = document.getElementById('candidateSelect');
+                    select.innerHTML = '<option value="">Sélectionnez un candidat</option>';
+                    
+                    data.forEach(candidate => {
+                        const option = document.createElement('option');
+                        option.value = candidate.id;
+                        option.textContent = `${candidate.nom} ${candidate.prenoms} - ${candidate.email}`;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showNotification('Erreur lors du chargement des candidats', 'error');
+                });
+        }
+
+        // Gestion de la génération de convocation
+        document.getElementById('generateConvocation').addEventListener('click', function() {
+            const candidateId = document.getElementById('candidateSelect').value;
+            const examDate = document.getElementById('examDate').value;
+            const examLocation = document.getElementById('examLocation').value;
+            const examDuration = document.getElementById('examDuration').value;
+            const examInstructions = document.getElementById('examInstructions').value;
+
+            if (!candidateId || !examDate || !examLocation || !examDuration) {
+                showNotification('Veuillez remplir tous les champs obligatoires', 'error');
+                return;
+            }
+
+            // Préparer les données pour la génération du PDF
+            const data = {
+                candidate_id: candidateId,
+                exam_date: examDate,
+                exam_location: examLocation,
+                exam_duration: examDuration,
+                exam_instructions: examInstructions
+            };
+
+            // Générer le PDF
+            fetch('generate_convocation.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const url = URL.createObjectURL(blob);
+                document.getElementById('pdfViewer').src = url;
+                document.getElementById('pdfPreview').style.display = 'block';
+                document.getElementById('saveConvocation').disabled = false;
+                
+                // Stocker les données pour l'enregistrement
+                window.currentConvocationData = {
+                    candidate_id: candidateId,
+                    pdf_blob: blob
+                };
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showNotification('Erreur lors de la génération du PDF', 'error');
+            });
+        });
+
+        // Gestion de l'enregistrement de la convocation
+        document.getElementById('saveConvocation').addEventListener('click', function() {
+            if (!window.currentConvocationData) {
+                showNotification('Aucune convocation à enregistrer', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('candidate_id', window.currentConvocationData.candidate_id);
+            formData.append('type_document', 'convocation');
+            formData.append('pdf_file', window.currentConvocationData.pdf_blob, 'convocation.pdf');
+
+            fetch('save_convocation.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Convocation enregistrée avec succès', 'success');
+                    document.getElementById('saveConvocation').disabled = true;
+                    // Réinitialiser le formulaire
+                    document.getElementById('convocationForm').reset();
+                    document.getElementById('pdfPreview').style.display = 'none';
+                } else {
+                    throw new Error(data.error || 'Erreur lors de l\'enregistrement');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showNotification(error.message, 'error');
+            });
+        });
+
+        // Charger les candidats validés au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadValidatedCandidates();
+        });
     </script>
 </body>
 </html>

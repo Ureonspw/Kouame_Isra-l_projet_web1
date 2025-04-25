@@ -1,0 +1,3 @@
+<br />
+<b>Warning</b>:  The use statement with non-compound name 'TCPDF' has no effect in <b>/Users/admin/Documents/Kouame_Israël_projet_web1/src/php/generate_convocation.php</b> on line <b>5</b><br />
+ <strong>TCPDF ERROR: </strong>Some data has already been output, can&#039;t send PDF file

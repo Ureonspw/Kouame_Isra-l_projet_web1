@@ -24,6 +24,7 @@ try {
 
 } catch(PDOException $e) {
     // Gestion des erreurs
-    die("Erreur de connexion : " . $e->getMessage());
+    error_log("Erreur de connexion à la base de données : " . $e->getMessage());
+    die("Erreur de connexion à la base de données");
 }
 ?> 

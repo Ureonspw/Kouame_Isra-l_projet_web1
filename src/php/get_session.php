@@ -22,35 +22,30 @@ if (!isset($_GET['id'])) {
 $session_id = $_GET['id'];
 
 try {
-    // Vérifier d'abord si la session existe
-    $stmt = $conn->prepare("SELECT id FROM SESSION_CONCOURS WHERE id = ?");
-    $stmt->execute([$session_id]);
-    if (!$stmt->fetch()) {
-        http_response_code(404);
-        echo json_encode(['error' => 'Session non trouvée']);
-        exit();
-    }
-
-    // Récupérer les détails de la session
-    $stmt = $conn->prepare("
-        SELECT s.*, c.nom as concours_nom 
-        FROM SESSION_CONCOURS s 
-        LEFT JOIN CONCOURS c ON s.concours_id = c.id 
-        WHERE s.id = ?
-    ");
-    $stmt->execute([$session_id]);
+    $query = "SELECT * FROM SESSION_CONCOURS WHERE id = :id";
+    
+    $stmt = $conn->prepare($query);
+    $stmt->bindParam(':id', $_GET['id'], PDO::PARAM_INT);
+    $stmt->execute();
+    
     $session = $stmt->fetch(PDO::FETCH_ASSOC);
-
+    
     if (!$session) {
         http_response_code(404);
         echo json_encode(['error' => 'Session non trouvée']);
         exit();
     }
-
+    
+    // Formater les dates pour l'affichage
+    $session['date_ouverture'] = date('Y-m-d', strtotime($session['date_ouverture']));
+    $session['date_cloture'] = date('Y-m-d', strtotime($session['date_cloture']));
+    
+    header('Content-Type: application/json');
     echo json_encode($session);
-} catch (PDOException $e) {
+    
+} catch(PDOException $e) {
     error_log("Erreur PDO dans get_session.php: " . $e->getMessage());
     http_response_code(500);
-    echo json_encode(['error' => 'Erreur de base de données: ' . $e->getMessage()]);
+    echo json_encode(['error' => $e->getMessage()]);
 }
 ?> 

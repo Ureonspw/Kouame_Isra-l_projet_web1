@@ -63,6 +63,100 @@ $stmt = $conn->prepare("
 $stmt->execute([$_SESSION['user_id']]);
 $diplomes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Récupérer les sessions de concours disponibles
+$stmt = $conn->prepare("
+    SELECT sc.*, c.nom as concours_nom, c.description as concours_description
+    FROM SESSION_CONCOURS sc
+    JOIN CONCOURS c ON sc.concours_id = c.id
+    WHERE sc.date_cloture >= CURDATE()
+    ORDER BY sc.date_ouverture DESC
+");
+$stmt->execute();
+$sessions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Récupérer les centres d'examen pour chaque session
+$centres = [];
+foreach ($sessions as $session) {
+    $stmt = $conn->prepare("
+        SELECT * FROM CENTRE_EXAMEN
+        WHERE session_id = ?
+        ORDER BY ville
+    ");
+    $stmt->execute([$session['id']]);
+    $centres[$session['id']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// Récupérer les inscriptions sans paiement
+$stmt = $conn->prepare("
+    SELECT 
+        i.id as inscription_id,
+        sc.concours_id,
+        c.nom as concours_nom,
+        c.description as concours_description,
+        sc.date_ouverture,
+        sc.date_cloture
+    FROM INSCRIPTION i
+    JOIN SESSION_CONCOURS sc ON i.session_id = sc.id
+    JOIN CONCOURS c ON sc.concours_id = c.id
+    LEFT JOIN PAIEMENT p ON p.inscription_id = i.id
+    WHERE i.candidat_id = (
+        SELECT id FROM CANDIDAT 
+        WHERE utilisateur_id = ?
+    )
+    AND p.id IS NULL
+    ORDER BY i.created_at DESC
+");
+$stmt->execute([$_SESSION['user_id']]);
+$inscriptions_sans_paiement = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Récupérer les inscriptions existantes du candidat
+$stmt = $conn->prepare("
+    SELECT 
+        i.*, 
+        sc.concours_id, 
+        c.nom as concours_nom,
+        c.description as concours_description,
+        sc.date_ouverture,
+        sc.date_cloture,
+        sc.nb_places,
+        ce.ville as centre_ville,
+        ce.lieu as centre_lieu,
+        ce.capacite as centre_capacite
+    FROM INSCRIPTION i
+    JOIN SESSION_CONCOURS sc ON i.session_id = sc.id
+    JOIN CONCOURS c ON sc.concours_id = c.id
+    LEFT JOIN CENTRE_EXAMEN ce ON i.centre_id = ce.id
+    WHERE i.candidat_id = (
+        SELECT id FROM CANDIDAT 
+        WHERE utilisateur_id = ?
+    )
+    ORDER BY i.created_at DESC
+");
+$stmt->execute([$_SESSION['user_id']]);
+$inscriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Récupérer les paiements des inscriptions
+$stmt = $conn->prepare("
+    SELECT 
+        p.*,
+        i.id as inscription_id,
+        sc.concours_id,
+        c.nom as concours_nom,
+        sc.date_ouverture,
+        sc.date_cloture
+    FROM PAIEMENT p
+    JOIN INSCRIPTION i ON p.inscription_id = i.id
+    JOIN SESSION_CONCOURS sc ON i.session_id = sc.id
+    JOIN CONCOURS c ON sc.concours_id = c.id
+    WHERE i.candidat_id = (
+        SELECT id FROM CANDIDAT 
+        WHERE utilisateur_id = ?
+    )
+    ORDER BY p.created_at DESC
+");
+$stmt->execute([$_SESSION['user_id']]);
+$paiements = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 // L'utilisateur est connecté, on peut afficher la page
 $user_name = $_SESSION['user_name'];
 ?>
@@ -386,9 +480,513 @@ $user_name = $_SESSION['user_name'];
                     <h1>Postuler à un concours</h1>
                 </div>
                 <div class="section-content">
-                    <!-- Postuler content will be loaded here -->
+                    <div class="postuler-container">
+                        <!-- Section des inscriptions existantes -->
+                        <div class="inscriptions-existantes">
+                            <h2>Mes inscriptions en cours</h2>
+                            <div class="inscriptions-grid">
+                                <?php foreach ($inscriptions as $inscription): ?>
+                                    <div class="inscription-card">
+                                        <div class="inscription-header">
+                                            <h3><?php echo htmlspecialchars($inscription['concours_nom']); ?></h3>
+                                            <div class="inscription-actions">
+                                                <span class="statut-badge statut-<?php echo $inscription['statut']; ?>">
+                                                    <?php echo ucfirst($inscription['statut']); ?>
+                                                </span>
+                                                <button class="btn-delete" 
+                                                        onclick="confirmDelete(<?php echo $inscription['id']; ?>)"
+                                                        title="Supprimer l'inscription">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="inscription-content">
+                                            <p class="inscription-description">
+                                                <?php echo htmlspecialchars($inscription['concours_description']); ?>
+                                            </p>
+                                            <div class="inscription-details">
+                                                <div class="detail-group">
+                                                    <h4>Dates importantes</h4>
+                                                    <p><i class="fas fa-calendar-check"></i> Ouverture: <?php echo date('d/m/Y', strtotime($inscription['date_ouverture'])); ?></p>
+                                                    <p><i class="fas fa-calendar-times"></i> Clôture: <?php echo date('d/m/Y', strtotime($inscription['date_cloture'])); ?></p>
+                                                    <p><i class="fas fa-calendar-alt"></i> Date d'inscription: <?php echo date('d/m/Y', strtotime($inscription['date_inscription'])); ?></p>
+                                                </div>
+                                                <div class="detail-group">
+                                                    <h4>Centre d'examen</h4>
+                                                    <p><i class="fas fa-map-marker-alt"></i> Ville: <?php echo htmlspecialchars($inscription['centre_ville']); ?></p>
+                                                    <p><i class="fas fa-building"></i> Lieu: <?php echo htmlspecialchars($inscription['centre_lieu']); ?></p>
+                                                    <p><i class="fas fa-users"></i> Capacité: <?php echo $inscription['centre_capacite'] ?? 'Non spécifiée'; ?></p>
+                                                </div>
+                                                <div class="detail-group">
+                                                    <h4>Informations</h4>
+                                                    <p><i class="fas fa-ticket-alt"></i> Places disponibles: <?php echo $inscription['nb_places'] ?? 'Non limité'; ?></p>
+                                                    <p><i class="fas fa-clock"></i> Dernière mise à jour: <?php echo date('d/m/Y H:i', strtotime($inscription['created_at'])); ?></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <!-- Section des concours disponibles -->
+                        <div class="concours-disponibles">
+                            <h2>Concours disponibles</h2>
+                            <div class="concours-grid">
+                                <?php foreach ($sessions as $session): ?>
+                                    <div class="concours-card">
+                                        <div class="concours-header">
+                                            <h3><?php echo htmlspecialchars($session['concours_nom']); ?></h3>
+                                            <div class="concours-dates">
+                                                <span class="date-ouverture">
+                                                    <i class="fas fa-door-open"></i> 
+                                                    Ouverture: <?php echo date('d/m/Y', strtotime($session['date_ouverture'])); ?>
+                                                </span>
+                                                <span class="date-cloture">
+                                                    <i class="fas fa-door-closed"></i> 
+                                                    Clôture: <?php echo date('d/m/Y', strtotime($session['date_cloture'])); ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="concours-content">
+                                            <p class="concours-description">
+                                                <?php echo htmlspecialchars($session['concours_description']); ?>
+                                            </p>
+                                            <div class="concours-info">
+                                                <span class="places-disponibles">
+                                                    <i class="fas fa-users"></i>
+                                                    Places disponibles: <?php echo $session['nb_places'] ?? 'Non limité'; ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="concours-actions">
+                                            <button class="btn-inscription" 
+                                                    onclick="showInscriptionModal(<?php echo $session['id']; ?>)"
+                                                    <?php echo (strtotime($session['date_cloture']) < time()) ? 'disabled' : ''; ?>>
+                                                <i class="fas fa-pencil-alt"></i>
+                                                S'inscrire
+                                            </button>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Modal d'inscription -->
+            <div id="inscriptionModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Inscription au concours</h2>
+                        <span class="close-modal" onclick="hideInscriptionModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="inscriptionForm" class="inscription-form">
+                            <input type="hidden" id="sessionId" name="session_id">
+                            
+                            <div class="form-group">
+                                <label for="centreExamen">Centre d'examen</label>
+                                <select id="centreExamen" name="centre_id" required>
+                                    <option value="">Sélectionnez un centre d'examen</option>
+                                </select>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" onclick="hideInscriptionModal()">Annuler</button>
+                                <button type="submit" class="submit-btn">Valider l'inscription</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de confirmation de suppression -->
+            <div id="deleteModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Confirmer la suppression</h2>
+                        <span class="close-modal" onclick="hideDeleteModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <p>Êtes-vous sûr de vouloir supprimer cette inscription ? Cette action est irréversible.</p>
+                        <div class="form-actions">
+                            <button type="button" class="cancel-btn" onclick="hideDeleteModal()">Annuler</button>
+                            <button type="button" class="delete-btn" onclick="deleteInscription()">Supprimer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                let inscriptionToDelete = null;
+
+                function confirmDelete(inscriptionId) {
+                    inscriptionToDelete = inscriptionId;
+                    document.getElementById('deleteModal').style.display = 'block';
+                }
+
+                function hideDeleteModal() {
+                    document.getElementById('deleteModal').style.display = 'none';
+                    inscriptionToDelete = null;
+                }
+
+                function deleteInscription() {
+                    if (!inscriptionToDelete) return;
+
+                    fetch('delete_inscription.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'inscription_id=' + inscriptionToDelete
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Inscription supprimée avec succès !');
+                            location.reload();
+                        } else {
+                            alert('Erreur lors de la suppression: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Une erreur est survenue lors de la suppression');
+                    })
+                    .finally(() => {
+                        hideDeleteModal();
+                    });
+                }
+
+                function showInscriptionModal(sessionId) {
+                    const modal = document.getElementById('inscriptionModal');
+                    const sessionIdInput = document.getElementById('sessionId');
+                    const centreSelect = document.getElementById('centreExamen');
+                    
+                    // Remplir le select des centres d'examen
+                    const centres = <?php echo json_encode($centres); ?>;
+                    centreSelect.innerHTML = '<option value="">Sélectionnez un centre d\'examen</option>';
+                    
+                    if (centres[sessionId]) {
+                        centres[sessionId].forEach(centre => {
+                            const option = document.createElement('option');
+                            option.value = centre.id;
+                            option.textContent = `${centre.ville} - ${centre.lieu}`;
+                            centreSelect.appendChild(option);
+                        });
+                    }
+                    
+                    sessionIdInput.value = sessionId;
+                    modal.style.display = 'block';
+                }
+
+                function hideInscriptionModal() {
+                    document.getElementById('inscriptionModal').style.display = 'none';
+                }
+
+                // Gérer la soumission du formulaire
+                document.getElementById('inscriptionForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    
+                    fetch('process_inscription.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Inscription effectuée avec succès !');
+                            hideInscriptionModal();
+                            location.reload();
+                        } else {
+                            alert('Erreur lors de l\'inscription: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Une erreur est survenue lors de l\'inscription');
+                    });
+                });
+            </script>
+
+            <style>
+                .postuler-container {
+                    padding: 20px;
+                }
+
+                .inscriptions-existantes,
+                .concours-disponibles {
+                    margin-bottom: 40px;
+                }
+
+                .inscriptions-grid,
+                .concours-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 20px;
+                    margin-top: 20px;
+                }
+
+                .inscription-card,
+                .concours-card {
+                    background: #fff;
+                    border-radius: 10px;
+                    padding: 20px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    transition: transform 0.3s ease;
+                }
+
+                .inscription-card:hover,
+                .concours-card:hover {
+                    transform: translateY(-5px);
+                }
+
+                .inscription-header,
+                .concours-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                }
+
+                .statut-badge {
+                    padding: 5px 10px;
+                    border-radius: 15px;
+                    font-size: 0.8em;
+                    font-weight: bold;
+                }
+
+                .statut-valide {
+                    background-color: #4CAF50;
+                    color: white;
+                }
+
+                .statut-en_attente {
+                    background-color: #FFC107;
+                    color: black;
+                }
+
+                .statut-rejete {
+                    background-color: #F44336;
+                    color: white;
+                }
+
+                .concours-dates {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                    font-size: 0.9em;
+                    color: #666;
+                }
+
+                .concours-content {
+                    margin: 15px 0;
+                }
+
+                .concours-description {
+                    color: #666;
+                    margin-bottom: 15px;
+                }
+
+                .concours-info {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    color: #666;
+                }
+
+                .btn-inscription {
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    width: 100%;
+                    transition: background-color 0.3s ease;
+                }
+
+                .btn-inscription:hover {
+                    background-color: #45a049;
+                }
+
+                .btn-inscription:disabled {
+                    background-color: #cccccc;
+                    cursor: not-allowed;
+                }
+
+                .modal {
+                    display: none;
+                    position: fixed;
+                    z-index: 1000;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0,0,0,0.5);
+                }
+
+                .modal-content {
+                    background-color: #fefefe;
+                    margin: 10% auto;
+                    padding: 20px;
+                    border-radius: 10px;
+                    width: 50%;
+                    max-width: 600px;
+                }
+
+                .modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 20px;
+                }
+
+                .close-modal {
+                    font-size: 28px;
+                    font-weight: bold;
+                    cursor: pointer;
+                }
+
+                .inscription-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .form-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+
+                .form-group label {
+                    font-weight: bold;
+                }
+
+                .form-group select {
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                }
+
+                .form-actions {
+                    display: flex;
+                    justify-content: flex-end;
+                    gap: 10px;
+                    margin-top: 20px;
+                }
+
+                .cancel-btn,
+                .submit-btn {
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+
+                .cancel-btn {
+                    background-color: #f44336;
+                    color: white;
+                    border: none;
+                }
+
+                .submit-btn {
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                }
+
+                @media (max-width: 768px) {
+                    .modal-content {
+                        width: 90%;
+                        margin: 20% auto;
+                    }
+
+                    .inscriptions-grid,
+                    .concours-grid {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                .inscription-content {
+                    margin-top: 15px;
+                }
+
+                .inscription-description {
+                    color: #666;
+                    margin-bottom: 15px;
+                    font-style: italic;
+                }
+
+                .inscription-details {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 20px;
+                    margin-top: 15px;
+                }
+
+                .detail-group {
+                    background: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 8px;
+                }
+
+                .detail-group h4 {
+                    margin-bottom: 10px;
+                    color: #333;
+                    font-size: 1.1em;
+                }
+
+                .detail-group p {
+                    margin: 5px 0;
+                    color: #666;
+                    font-size: 0.9em;
+                }
+
+                .inscription-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+
+                .btn-delete {
+                    background: none;
+                    border: none;
+                    color: #dc3545;
+                    cursor: pointer;
+                    padding: 5px;
+                    border-radius: 50%;
+                    transition: background-color 0.3s ease;
+                }
+
+                .btn-delete:hover {
+                    background-color: rgba(220, 53, 69, 0.1);
+                }
+
+                .delete-btn {
+                    background-color: #dc3545;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                }
+
+                .delete-btn:hover {
+                    background-color: #c82333;
+                }
+
+                @media (max-width: 768px) {
+                    .inscription-details {
+                        grid-template-columns: 1fr;
+                    }
+                }
+            </style>
+
             <div class="content-section" id="suivi">
                 <div class="content-header">
                     <h1>Suivi des étapes</h1>
@@ -589,9 +1187,503 @@ $user_name = $_SESSION['user_name'];
                     <h1>Régulariser un paiement</h1>
                 </div>
                 <div class="section-content">
-                    <!-- Paiement content will be loaded here -->
+                    <div class="paiement-container">
+                        <!-- Section pour créer un nouveau paiement -->
+                        <div class="nouveau-paiement">
+                            <h2>Créer un nouveau paiement</h2>
+                            <div class="inscriptions-sans-paiement">
+                                <?php if (empty($inscriptions_sans_paiement)): ?>
+                                    <p class="no-payment">Aucune inscription sans paiement.</p>
+                                <?php else: ?>
+                                    <div class="inscriptions-grid">
+                                        <?php foreach ($inscriptions_sans_paiement as $inscription): ?>
+                                            <div class="inscription-card">
+                                                <div class="inscription-header">
+                                                    <h3><?php echo htmlspecialchars($inscription['concours_nom']); ?></h3>
+                                                </div>
+                                                <div class="inscription-content">
+                                                    <p class="inscription-description">
+                                                        <?php echo htmlspecialchars($inscription['concours_description']); ?>
+                                                    </p>
+                                                    <div class="inscription-details">
+                                                        <div class="detail-group">
+                                                            <h4>Dates importantes</h4>
+                                                            <p><i class="fas fa-calendar-check"></i> Ouverture: <?php echo date('d/m/Y', strtotime($inscription['date_ouverture'])); ?></p>
+                                                            <p><i class="fas fa-calendar-times"></i> Clôture: <?php echo date('d/m/Y', strtotime($inscription['date_cloture'])); ?></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="inscription-actions">
+                                                        <button class="btn-payer" onclick="showNouveauPaiementModal(<?php echo $inscription['inscription_id']; ?>)">
+                                                            <i class="fas fa-plus-circle"></i>
+                                                            Créer un paiement
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Section des paiements en attente -->
+                        <div class="paiements-en-attente">
+                            <h2>Paiements en attente</h2>
+                            <div class="paiements-grid">
+                                <?php foreach ($paiements as $paiement): ?>
+                                    <?php if ($paiement['statut'] === 'en_attente'): ?>
+                                        <div class="paiement-card">
+                                            <div class="paiement-header">
+                                                <h3><?php echo htmlspecialchars($paiement['concours_nom']); ?></h3>
+                                                <span class="statut-badge statut-<?php echo $paiement['statut']; ?>">
+                                                    <?php echo ucfirst($paiement['statut']); ?>
+                                                </span>
+                                            </div>
+                                            <div class="paiement-content">
+                                                <div class="paiement-details">
+                                                    <div class="detail-group">
+                                                        <h4>Informations de paiement</h4>
+                                                        <p><i class="fas fa-money-bill-wave"></i> Montant: <?php echo number_format($paiement['montant'], 2, ',', ' '); ?> FCFA</p>
+                                                        <p><i class="fas fa-credit-card"></i> Mode de paiement: <?php echo htmlspecialchars($paiement['mode_paiement']); ?></p>
+                                                        <p><i class="fas fa-calendar"></i> Date: <?php echo date('d/m/Y', strtotime($paiement['date_paiement'])); ?></p>
+                                                    </div>
+                                                    <div class="detail-group">
+                                                        <h4>Informations du concours</h4>
+                                                        <p><i class="fas fa-calendar-check"></i> Ouverture: <?php echo date('d/m/Y', strtotime($paiement['date_ouverture'])); ?></p>
+                                                        <p><i class="fas fa-calendar-times"></i> Clôture: <?php echo date('d/m/Y', strtotime($paiement['date_cloture'])); ?></p>
+                                                    </div>
+                                                </div>
+                                                <div class="paiement-actions">
+                                                    <button class="btn-payer" onclick="showPaiementModal(<?php echo $paiement['id']; ?>)">
+                                                        <i class="fas fa-credit-card"></i>
+                                                        Modifier le paiement
+                                                    </button>
+                                                    <button class="btn-valider" onclick="validerPaiement(<?php echo $paiement['id']; ?>)">
+                                                        <i class="fas fa-check"></i>
+                                                        Valider le paiement
+                                                    </button>
+                                                    <button class="btn-annuler" onclick="annulerPaiement(<?php echo $paiement['id']; ?>)">
+                                                        <i class="fas fa-times"></i>
+                                                        Annuler le paiement
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <!-- Section des paiements effectués -->
+                        <div class="paiements-effectues">
+                            <h2>Historique des paiements</h2>
+                            <div class="paiements-grid">
+                                <?php foreach ($paiements as $paiement): ?>
+                                    <?php if ($paiement['statut'] !== 'en_attente'): ?>
+                                        <div class="paiement-card">
+                                            <div class="paiement-header">
+                                                <h3><?php echo htmlspecialchars($paiement['concours_nom']); ?></h3>
+                                                <span class="statut-badge statut-<?php echo $paiement['statut']; ?>">
+                                                    <?php echo ucfirst($paiement['statut']); ?>
+                                                </span>
+                                            </div>
+                                            <div class="paiement-content">
+                                                <div class="paiement-details">
+                                                    <div class="detail-group">
+                                                        <h4>Informations de paiement</h4>
+                                                        <p><i class="fas fa-money-bill-wave"></i> Montant: <?php echo number_format($paiement['montant'], 2, ',', ' '); ?> FCFA</p>
+                                                        <p><i class="fas fa-credit-card"></i> Mode de paiement: <?php echo htmlspecialchars($paiement['mode_paiement']); ?></p>
+                                                        <p><i class="fas fa-calendar"></i> Date: <?php echo date('d/m/Y', strtotime($paiement['date_paiement'])); ?></p>
+                                                    </div>
+                                                    <div class="detail-group">
+                                                        <h4>Informations du concours</h4>
+                                                        <p><i class="fas fa-calendar-check"></i> Ouverture: <?php echo date('d/m/Y', strtotime($paiement['date_ouverture'])); ?></p>
+                                                        <p><i class="fas fa-calendar-times"></i> Clôture: <?php echo date('d/m/Y', strtotime($paiement['date_cloture'])); ?></p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- Modal de paiement -->
+            <div id="paiementModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Modifier le paiement</h2>
+                        <span class="close-modal" onclick="hidePaiementModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="paiementForm" class="paiement-form">
+                            <input type="hidden" id="paiementId" name="paiement_id">
+                            
+                            <div class="form-group">
+                                <label for="montant">Montant (FCFA)</label>
+                                <input type="number" id="montant" name="montant" step="0.01" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="modePaiement">Mode de paiement</label>
+                                <select id="modePaiement" name="mode_paiement" required>
+                                    <option value="">Sélectionnez un mode de paiement</option>
+                                    <option value="Orange Money">Orange Money</option>
+                                    <option value="MTN Mobile Money">MTN Mobile Money</option>
+                                    <option value="Wave">Wave</option>
+                                    <option value="Carte bancaire">Carte bancaire</option>
+                                    <option value="Espèces">Espèces</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="datePaiement">Date de paiement</label>
+                                <input type="date" id="datePaiement" name="date_paiement" required>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" onclick="hidePaiementModal()">Annuler</button>
+                                <button type="submit" class="submit-btn">Valider le paiement</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal de nouveau paiement -->
+            <div id="nouveauPaiementModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Créer un nouveau paiement</h2>
+                        <span class="close-modal" onclick="hideNouveauPaiementModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="nouveauPaiementForm" class="paiement-form">
+                            <input type="hidden" id="inscriptionId" name="inscription_id">
+                            
+                            <div class="form-group">
+                                <label for="nouveauMontant">Montant (FCFA)</label>
+                                <input type="number" id="nouveauMontant" name="montant" step="0.01" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="nouveauModePaiement">Mode de paiement</label>
+                                <select id="nouveauModePaiement" name="mode_paiement" required>
+                                    <option value="">Sélectionnez un mode de paiement</option>
+                                    <option value="Orange Money">Orange Money</option>
+                                    <option value="MTN Mobile Money">MTN Mobile Money</option>
+                                    <option value="Wave">Wave</option>
+                                    <option value="Carte bancaire">Carte bancaire</option>
+                                    <option value="Espèces">Espèces</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="nouvelleDatePaiement">Date de paiement</label>
+                                <input type="date" id="nouvelleDatePaiement" name="date_paiement" required>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" onclick="hideNouveauPaiementModal()">Annuler</button>
+                                <button type="submit" class="submit-btn">Créer le paiement</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function showPaiementModal(paiementId) {
+                    const modal = document.getElementById('paiementModal');
+                    const paiementIdInput = document.getElementById('paiementId');
+                    paiementIdInput.value = paiementId;
+                    modal.style.display = 'block';
+                }
+
+                function hidePaiementModal() {
+                    document.getElementById('paiementModal').style.display = 'none';
+                }
+
+                function showNouveauPaiementModal(inscriptionId) {
+                    const modal = document.getElementById('nouveauPaiementModal');
+                    const inscriptionIdInput = document.getElementById('inscriptionId');
+                    inscriptionIdInput.value = inscriptionId;
+                    modal.style.display = 'block';
+                }
+
+                function hideNouveauPaiementModal() {
+                    document.getElementById('nouveauPaiementModal').style.display = 'none';
+                }
+
+                // Gérer la soumission du formulaire de modification
+                document.getElementById('paiementForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    
+                    fetch('process_paiement.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Paiement modifié avec succès !');
+                            hidePaiementModal();
+                            location.reload();
+                        } else {
+                            alert('Erreur lors de la modification du paiement: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Une erreur est survenue lors de la modification du paiement');
+                    });
+                });
+
+                // Gérer la soumission du formulaire de création
+                document.getElementById('nouveauPaiementForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    
+                    fetch('create_paiement.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Paiement créé avec succès !');
+                            hideNouveauPaiementModal();
+                            location.reload();
+                        } else {
+                            alert('Erreur lors de la création du paiement: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Une erreur est survenue lors de la création du paiement');
+                    });
+                });
+
+                // Initialiser les dates du jour comme date de paiement par défaut
+                document.getElementById('datePaiement').valueAsDate = new Date();
+                document.getElementById('nouvelleDatePaiement').valueAsDate = new Date();
+
+                function validerPaiement(paiementId) {
+                    if (confirm('Êtes-vous sûr de vouloir valider ce paiement ?')) {
+                        fetch('valider_paiement.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: 'paiement_id=' + paiementId
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Paiement validé avec succès !');
+                                location.reload();
+                            } else {
+                                alert('Erreur lors de la validation du paiement: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Une erreur est survenue lors de la validation du paiement');
+                        });
+                    }
+                }
+
+                function annulerPaiement(paiementId) {
+                    if (confirm('Êtes-vous sûr de vouloir annuler ce paiement ? Cette action est irréversible.')) {
+                        fetch('annuler_paiement.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: 'paiement_id=' + paiementId
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Paiement annulé avec succès !');
+                                location.reload();
+                            } else {
+                                alert('Erreur lors de l\'annulation du paiement: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Une erreur est survenue lors de l\'annulation du paiement');
+                        });
+                    }
+                }
+            </script>
+
+            <style>
+                .paiement-container {
+                    padding: 20px;
+                }
+
+                .nouveau-paiement {
+                    margin-bottom: 40px;
+                }
+
+                .no-payment {
+                    text-align: center;
+                    color: #666;
+                    font-style: italic;
+                    padding: 20px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                }
+
+                .inscriptions-sans-paiement {
+                    margin-top: 20px;
+                }
+
+                .paiements-en-attente,
+                .paiements-effectues {
+                    margin-bottom: 40px;
+                }
+
+                .paiements-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 20px;
+                    margin-top: 20px;
+                }
+
+                .paiement-card {
+                    background: #fff;
+                    border-radius: 10px;
+                    padding: 20px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    transition: transform 0.3s ease;
+                }
+
+                .paiement-card:hover {
+                    transform: translateY(-5px);
+                }
+
+                .paiement-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                }
+
+                .paiement-content {
+                    margin-top: 15px;
+                }
+
+                .paiement-details {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 20px;
+                    margin-bottom: 20px;
+                }
+
+                .detail-group {
+                    background: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 8px;
+                }
+
+                .detail-group h4 {
+                    margin-bottom: 10px;
+                    color: #333;
+                    font-size: 1.1em;
+                }
+
+                .detail-group p {
+                    margin: 5px 0;
+                    color: #666;
+                    font-size: 0.9em;
+                }
+
+                .btn-payer {
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    width: 100%;
+                    transition: background-color 0.3s ease;
+                }
+
+                .btn-payer:hover {
+                    background-color: #45a049;
+                }
+
+                .paiement-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .form-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+
+                .form-group label {
+                    font-weight: bold;
+                }
+
+                .form-group input,
+                .form-group select {
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                }
+
+                @media (max-width: 768px) {
+                    .paiement-details {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                .btn-valider {
+                    background-color: #28a745;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    width: 100%;
+                    margin-top: 10px;
+                    transition: background-color 0.3s ease;
+                }
+
+                .btn-valider:hover {
+                    background-color: #218838;
+                }
+
+                .btn-annuler {
+                    background-color: #dc3545;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    width: 100%;
+                    margin-top: 10px;
+                    transition: background-color 0.3s ease;
+                }
+
+                .btn-annuler:hover {
+                    background-color: #c82333;
+                }
+            </style>
+
             <div class="content-section" id="cours">
                 <div class="content-header">
                     <h1>Cours de préparation</h1>

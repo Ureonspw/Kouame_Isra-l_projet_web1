@@ -9,6 +9,59 @@ if (!isset($_SESSION['is_logged_in']) || $_SESSION['is_logged_in'] !== true) {
 
 // L'utilisateur est connecté, on peut afficher la page
 $user_email = $_SESSION['user_email'];
+
+require_once '../../config/database.php';
+
+// Récupérer les statistiques
+try {
+    // Nombre de concours actifs (sessions en cours)
+    $stmt = $conn->query("
+        SELECT COUNT(*) as count 
+        FROM SESSION_CONCOURS 
+        WHERE date_ouverture <= CURDATE() 
+        AND date_cloture >= CURDATE()
+    ");
+    $concours_actifs = $stmt->fetch()['count'];
+
+    // Nombre de candidats inscrits aujourd'hui
+    $stmt = $conn->query("
+        SELECT COUNT(*) as count 
+        FROM INSCRIPTION 
+        WHERE DATE(date_inscription) = CURDATE()
+    ");
+    $candidats_aujourdhui = $stmt->fetch()['count'];
+
+    // Nombre total de candidats
+    $stmt = $conn->query("
+        SELECT COUNT(*) as count 
+        FROM CANDIDAT
+    ");
+    $total_candidats = $stmt->fetch()['count'];
+
+    // Dossiers en attente de traitement
+    $stmt = $conn->query("
+        SELECT COUNT(*) as count 
+        FROM INSCRIPTION 
+        WHERE statut = 'en_attente'
+    ");
+    $dossiers_attente = $stmt->fetch()['count'];
+
+    // Taux de complétion des dossiers (inscriptions validées / total inscriptions)
+    $stmt = $conn->query("
+        SELECT 
+            (SELECT COUNT(*) FROM INSCRIPTION WHERE statut = 'valide') * 100.0 / 
+            NULLIF((SELECT COUNT(*) FROM INSCRIPTION), 0) as taux
+    ");
+    $taux_completion = round($stmt->fetch()['taux'] ?? 0, 1);
+
+} catch(PDOException $e) {
+    error_log("Erreur lors de la récupération des statistiques: " . $e->getMessage());
+    $concours_actifs = 0;
+    $candidats_aujourdhui = 0;
+    $total_candidats = 0;
+    $dossiers_attente = 0;
+    $taux_completion = 0;
+}
 ?>
 
 <!DOCTYPE html>
@@ -20,7 +73,10 @@ $user_email = $_SESSION['user_email'];
     <link rel="stylesheet" href="../../assets/css/dashboardadmin.css">
     <!-- CSS pour le nouveau dashboard -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <title>PUBLIGEST CI - Dashboard Admin</title>
     <style>
     /* Styles pour la section utilisateurs */
@@ -1393,6 +1449,179 @@ $user_email = $_SESSION['user_email'];
             justify-content: center;
         }
     }
+
+    /* Styles pour la section des résultats */
+    .results-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+        margin-bottom: 40px;
+    }
+
+    .results-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .add-btn {
+        background-color: #1cc88a;
+        color: white;
+    }
+
+    .add-btn:hover {
+        background-color: #13855c;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(28, 200, 138, 0.3);
+    }
+
+    .results-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .results-table th,
+    .results-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #e3e6f0;
+    }
+
+    .results-table th {
+        background-color: #f8f9fc;
+        font-weight: 700;
+    }
+
+    .results-table tr:hover {
+        background-color: #f8f9fc;
+    }
+
+    .decision-badge {
+        padding: 5px 10px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .decision-admis {
+        background-color: #e3fcef;
+        color: #1cc88a;
+    }
+
+    .decision-rejete {
+        background-color: #fce3e3;
+        color: #e74a3b;
+    }
+
+    .decision-en-attente {
+        background-color: #fff3e3;
+        color: #f6c23e;
+    }
+
+    /* Modal styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 30px;
+        width: 50%;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .close {
+        float: right;
+        font-size: 28px;
+        cursor: pointer;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #5a5c69;
+    }
+
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d3e2;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .save-btn {
+        background-color: #4e73df;
+        color: white;
+        width: 100%;
+        padding: 12px;
+    }
+
+    .save-btn:hover {
+        background-color: #224abe;
+    }
+
+    @media (max-width: 768px) {
+        .results-stats {
+            grid-template-columns: 1fr;
+        }
+
+        .results-controls {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-content {
+            width: 90%;
+            margin: 20% auto;
+        }
+    }
+
+    /* Styles pour le select2 */
+    .select2-container {
+        width: 100% !important;
+    }
+    
+    .select2-container--default .select2-selection--single {
+        height: 40px;
+        border: 1px solid #d1d3e2;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 40px;
+        padding-left: 15px;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 38px;
+    }
+    
+    .select2-dropdown {
+        border: 1px solid #d1d3e2;
+        border-radius: 8px;
+    }
+    
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #4e73df;
+    }
     </style>
 </head>
 
@@ -1491,12 +1720,6 @@ $user_email = $_SESSION['user_email'];
                                 <span>Gérer les concours</span>
                             </a>
                         </li>
-                        <li data-section="applications">
-                            <a href="#">
-                                <i class="fas fa-file-alt"></i>
-                                <span>Candidatures</span>
-                            </a>
-                        </li>
                     </ul>
                 </div>
 
@@ -1539,18 +1762,6 @@ $user_email = $_SESSION['user_email'];
                                 <span>Utilisateurs</span>
                             </a>
                         </li>
-                        <li data-section="settings">
-                            <a href="#">
-                                <i class="fas fa-cog"></i>
-                                <span>Paramètres</span>
-                            </a>
-                        </li>
-                        <li data-section="reports">
-                            <a href="#">
-                                <i class="fas fa-file-pdf"></i>
-                                <span>Rapports</span>
-                            </a>
-                        </li>
                     </ul>
                 </div>
             </nav>
@@ -1579,19 +1790,7 @@ $user_email = $_SESSION['user_email'];
                     <h1>Tableau de bord Administrateur</h1>
                 </div>
                 <div class="header-right">
-                    <div class="search-box">
-                        <input type="text" placeholder="Rechercher...">
-                        <i class="fas fa-search"></i>
-                    </div>
-                    <div class="admin-actions">
-                        <button class="notification-btn" aria-label="Notifications">
-                            <i class="fas fa-bell"></i>
-                            <span class="notification-badge">3</span>
-                        </button>
-                        <button class="profile-btn" aria-label="Profile">
-                            <img src="../assets/images/profile.png" alt="Profile">
-                        </button>
-                    </div>
+                    
                 </div>
             </header>
 
@@ -1607,8 +1806,8 @@ $user_email = $_SESSION['user_email'];
                             </div>
                             <div class="stat-info">
                                 <h3>Concours Actifs</h3>
-                                <p class="stat-number">12</p>
-                                <span class="stat-change positive">+2 ce mois</span>
+                                <p class="stat-number"><?php echo $concours_actifs; ?></p>
+                                <span class="stat-change positive">En cours</span>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -1617,8 +1816,8 @@ $user_email = $_SESSION['user_email'];
                             </div>
                             <div class="stat-info">
                                 <h3>Candidats Inscrits</h3>
-                                <p class="stat-number">1,234</p>
-                                <span class="stat-change positive">+156 aujourd'hui</span>
+                                <p class="stat-number"><?php echo number_format($total_candidats); ?></p>
+                                <span class="stat-change positive">+<?php echo $candidats_aujourdhui; ?> aujourd'hui</span>
                             </div>
                         </div>
                         <div class="stat-card">
@@ -1627,67 +1826,25 @@ $user_email = $_SESSION['user_email'];
                             </div>
                             <div class="stat-info">
                                 <h3>Dossiers à Traiter</h3>
-                                <p class="stat-number">45</p>
-                                <span class="stat-change negative">Urgent</span>
+                                <p class="stat-number"><?php echo $dossiers_attente; ?></p>
+                                <span class="stat-change negative">En attente de validation</span>
                             </div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon red">
-                                <i class="fas fa-chart-pie"></i>
+                                <i class="fas fa-check-circle"></i>
                             </div>
                             <div class="stat-info">
-                                <h3>Taux de Complétion</h3>
-                                <p class="stat-number">78%</p>
-                                <span class="stat-change positive">+5% ce mois</span>
+                                <h3>Taux de Validation</h3>
+                                <p class="stat-number"><?php echo $taux_completion; ?>%</p>
+                                <span class="stat-change positive">Dossiers validés</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Recent Activity -->
-                <div class="dashboard-grid">
-                    <div class="widget">
-                        <div class="widget-header">
-                            <h3>Concours Récents</h3>
-                            <button class="view-all">Voir tout</button>
-                        </div>
-                        <div class="widget-content">
-                            <div class="concours-list">
-                                <div class="concours-item">
-                                    <div class="concours-info">
-                                        <h4>Concours ENA 2025</h4>
-                                        <p>Date limite: 15/06/2025</p>
-                                    </div>
-                                    <div class="concours-stats">
-                                        <span class="stat">156 inscrits</span>
-                                        <span class="status active">Actif</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="widget">
-                        <div class="widget-header">
-                            <h3>Dossiers en Attente</h3>
-                            <button class="view-all">Voir tout</button>
-                        </div>
-                        <div class="widget-content">
-                            <div class="dossiers-list">
-                                <div class="dossier-item">
-                                    <div class="dossier-info">
-                                        <h4>KOUAME ISRAEL</h4>
-                                        <p>Concours ENA 2025</p>
-                                    </div>
-                                    <div class="dossier-actions">
-                                        <button class="action-btn view">Voir</button>
-                                        <button class="action-btn validate">Valider</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+               
             </section>
 
             <!-- Statistics Section -->
@@ -1947,12 +2104,6 @@ $user_email = $_SESSION['user_email'];
             </div>
 
             <!-- Applications Section -->
-            <section id="applications" class="content-section">
-                <div class="section-content">
-                    <h2>Candidatures</h2>
-                    <!-- Add applications content here -->
-                </div>
-            </section>
 
             <!-- Candidate Files Section -->
             <section id="candidate-files" class="content-section">
@@ -2113,9 +2264,103 @@ $user_email = $_SESSION['user_email'];
             <section id="results" class="content-section">
                 <div class="section-content">
                     <h2>Résultats des concours</h2>
-                    <!-- Add results content here -->
+                    
+                    <!-- Statistiques des résultats -->
+                    <div class="results-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Admis</h3>
+                                <p class="stat-number" id="admis-count">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>Rejetés</h3>
+                                <p class="stat-number" id="rejetes-count">0</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3>En attente</h3>
+                                <p class="stat-number" id="en-attente-count">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contrôles des résultats -->
+                    <div class="results-controls">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="search-results" placeholder="Rechercher un candidat, un concours ou une session...">
+                        </div>
+                        <button class="action-btn add-btn" onclick="openAddResultModal()">
+                            <i class="fas fa-plus"></i> Ajouter un résultat
+                        </button>
+                    </div>
+
+                    <!-- Tableau des résultats -->
+                    <div class="table-responsive">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Inscription</th>
+                                    <th>Nom du candidat</th>
+                                    <th>Concours</th>
+                                    <th>Session</th>
+                                    <th>Centre</th>
+                                    <th>Note</th>
+                                    <th>Décision</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-table-body">
+                                <!-- Les résultats seront chargés dynamiquement ici -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </section>
+
+            <!-- Modal pour ajouter/modifier un résultat -->
+            <div id="result-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close">&times;</span>
+                    <h3 id="modal-title">Ajouter un résultat</h3>
+                    <form id="result-form">
+                        <input type="hidden" id="result-id" name="id">
+                        <div class="form-group">
+                            <label for="inscription-id">Candidat et Concours</label>
+                            <select id="inscription-id" name="inscription_id" required class="select2">
+                                <option value="">Sélectionnez un candidat...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="note">Note (sur 1000)</label>
+                            <input type="number" id="note" name="note" step="0.01" min="0" max="1000" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="decision">Décision</label>
+                            <select id="decision" name="decision" required>
+                                <option value="">Sélectionnez une décision...</option>
+                                <option value="admis">Admis</option>
+                                <option value="rejete">Rejeté</option>
+                                <option value="en_attente">En attente</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="action-btn save-btn">Enregistrer</button>
+                    </form>
+                </div>
+            </div>
 
             <!-- Users Section -->
             <section id="users" class="content-section">
@@ -2183,20 +2428,8 @@ $user_email = $_SESSION['user_email'];
             </section>
 
             <!-- Settings Section -->
-            <section id="settings" class="content-section">
-                <div class="section-content">
-                    <h2>Paramètres du système</h2>
-                    <!-- Add settings content here -->
-                </div>
-            </section>
 
             <!-- Reports Section -->
-            <section id="reports" class="content-section">
-                <div class="section-content">
-                    <h2>Rapports et statistiques</h2>
-                    <!-- Add reports content here -->
-                </div>
-            </section>
         </main>
     </div>
 
@@ -3473,6 +3706,357 @@ $user_email = $_SESSION['user_email'];
         document.addEventListener('DOMContentLoaded', function() {
             loadValidatedCandidates();
         });
+
+        // Fonction pour charger les résultats
+        function loadResults() {
+            fetch('get_results.php')
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Erreur lors du chargement des résultats');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tbody = document.getElementById('results-table-body');
+                    tbody.innerHTML = '';
+                    
+                    let admisCount = 0;
+                    let rejetesCount = 0;
+                    let enAttenteCount = 0;
+
+                    data.forEach(result => {
+                        const tr = document.createElement('tr');
+                        const dateOuverture = new Date(result.date_ouverture).getFullYear();
+                        const dateCloture = new Date(result.date_cloture).getFullYear();
+                        
+                        // Vérification des champs avant de les utiliser
+                        const nomCandidat = result.nom_candidat || 'Nom inconnu';
+                        const concoursNom = result.concours_nom || 'Concours inconnu';
+                        const centreVille = result.centre_ville || 'Ville inconnue';
+                        const centreLieu = result.centre_lieu || 'Lieu inconnu';
+                        
+                        tr.innerHTML = `
+                            <td>${result.inscription_id}</td>
+                            <td>${nomCandidat}</td>
+                            <td>${concoursNom}</td>
+                            <td>${dateOuverture}-${dateCloture}</td>
+                            <td>${centreVille} - ${centreLieu}</td>
+                            <td>${result.note}</td>
+                            <td><span class="decision-badge decision-${result.decision}">${result.decision}</span></td>
+                            <td>${new Date(result.created_at).toLocaleDateString()}</td>
+                            <td>
+                                <button class="action-btn edit-btn" onclick="editResult(${result.id})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteResult(${result.id})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+
+                        if (result.decision === 'admis') admisCount++;
+                        else if (result.decision === 'rejete') rejetesCount++;
+                        else enAttenteCount++;
+                    });
+
+                    document.getElementById('admis-count').textContent = admisCount;
+                    document.getElementById('rejetes-count').textContent = rejetesCount;
+                    document.getElementById('en-attente-count').textContent = enAttenteCount;
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert(error.message || 'Erreur lors du chargement des résultats');
+                });
+        }
+
+        // Fonction pour filtrer les résultats
+        function filterResults(searchTerm) {
+            const rows = document.querySelectorAll('#results-table-body tr');
+            searchTerm = searchTerm.toLowerCase();
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+
+        // Écouter la barre de recherche
+        document.getElementById('search-results').addEventListener('input', function(e) {
+            filterResults(e.target.value);
+        });
+
+        // Fonction pour supprimer un résultat
+        function deleteResult(id) {
+            if (confirm('Êtes-vous sûr de vouloir supprimer ce résultat ?')) {
+                fetch(`delete_result.php?id=${id}`, { 
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Erreur lors de la suppression');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        loadResults();
+                        alert('Résultat supprimé avec succès');
+                    } else {
+                        throw new Error(data.error || 'Erreur lors de la suppression');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert(error.message || 'Erreur lors de la suppression');
+                });
+            }
+        }
+
+        // Fonction pour éditer un résultat
+        function editResult(id) {
+            fetch(`get_result.php?id=${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Erreur lors de la récupération des données');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('modal-title').textContent = 'Modifier un résultat';
+                    document.getElementById('result-id').value = data.id;
+                    loadInscriptions().then(() => {
+                        const select = document.getElementById('inscription-id');
+                        select.value = data.inscription_id;
+                        $(select).trigger('change');
+                    });
+                    document.getElementById('note').value = data.note;
+                    document.getElementById('decision').value = data.decision;
+                    document.getElementById('result-modal').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert(error.message || 'Erreur lors de la récupération des données');
+                });
+        }
+
+        // Gestion du formulaire
+        document.getElementById('result-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Récupérer les données du formulaire
+            const formData = new FormData(this);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+
+            // Validation de la note
+            const note = parseFloat(data.note);
+            if (isNaN(note) || note < 0 || note > 1000) {
+                alert('La note doit être un nombre entre 0 et 1000');
+                return;
+            }
+
+            // Validation de l'inscription
+            if (!data.inscription_id) {
+                alert('Veuillez sélectionner un candidat');
+                return;
+            }
+
+            // Validation de la décision
+            if (!data.decision) {
+                alert('Veuillez sélectionner une décision');
+                return;
+            }
+
+            fetch('save_result.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Erreur lors de la sauvegarde');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('result-modal').style.display = 'none';
+                    loadResults();
+                    alert(data.message || 'Opération réussie');
+                } else {
+                    throw new Error(data.error || 'Erreur lors de la sauvegarde');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert(error.message || 'Erreur lors de la sauvegarde');
+            });
+        });
+
+        // Fermer le modal
+        document.querySelector('.close').addEventListener('click', function() {
+            document.getElementById('result-modal').style.display = 'none';
+        });
+
+        // Charger les résultats au chargement de la page
+        document.addEventListener('DOMContentLoaded', loadResults);
+
+        // Fonction pour charger les inscriptions
+        function loadInscriptions() {
+            return fetch('get_inscriptions.php')
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Erreur lors du chargement des inscriptions');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Données reçues:', data); // Pour le débogage
+                    
+                    const select = document.getElementById('inscription-id');
+                    select.innerHTML = '<option value="">Sélectionnez un candidat</option>';
+                    
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(inscription => {
+                            const option = document.createElement('option');
+                            option.value = inscription.id;
+                            option.textContent = `${inscription.nom_candidat} - ${inscription.concours_nom} (${inscription.centre_ville})`;
+                            select.appendChild(option);
+                        });
+                    } else {
+                        console.error('Aucune donnée reçue ou format incorrect');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    alert(error.message || 'Erreur lors du chargement des inscriptions');
+                });
+        }
+
+        // Fonction pour formater l'affichage des options
+        function formatInscription(inscription) {
+            if (!inscription.id) return inscription.text;
+            
+            const text = inscription.text;
+            const parts = text.split(' - ');
+            const candidat = parts[0];
+            const details = parts[1];
+            
+            return $(`
+                <div style="padding: 5px;">
+                    <div style="font-weight: bold;">${candidat}</div>
+                    <div style="color: #666; font-size: 0.9em;">${details}</div>
+                </div>
+            `);
+        }
+
+        // Charger les inscriptions au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadResults();
+            loadInscriptions();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialisation des fonctionnalités
+            loadResults();
+            
+            // Écouter la barre de recherche
+            const searchInput = document.getElementById('search-results');
+            if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                    filterResults(e.target.value);
+                });
+            }
+
+            // Gestion du formulaire
+            const resultForm = document.getElementById('result-form');
+            if (resultForm) {
+                resultForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const data = {
+                        id: formData.get('result-id'),
+                        inscription_id: formData.get('inscription-id'),
+                        note: formData.get('note'),
+                        decision: formData.get('decision')
+                    };
+
+                    // Validation
+                    if (!data.inscription_id) {
+                        alert('Veuillez sélectionner un candidat');
+                        return;
+                    }
+
+                    if (!data.note || isNaN(data.note) || data.note < 0 || data.note > 20) {
+                        alert('Veuillez entrer une note valide entre 0 et 20');
+                        return;
+                    }
+
+                    if (!data.decision) {
+                        alert('Veuillez sélectionner une décision');
+                        return;
+                    }
+
+                    // Envoi des données
+                    fetch('save_result.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.error || 'Erreur lors de la sauvegarde');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            loadResults();
+                            document.getElementById('result-modal').style.display = 'none';
+                            alert('Résultat enregistré avec succès');
+                        } else {
+                            throw new Error(data.error || 'Erreur lors de la sauvegarde');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        alert(error.message || 'Erreur lors de la sauvegarde');
+                    });
+                });
+            }
+        });
+
+        // Fonction pour ouvrir le modal d'ajout
+        function openAddResultModal() {
+            document.getElementById('modal-title').textContent = 'Ajouter un résultat';
+            document.getElementById('result-form').reset();
+            document.getElementById('result-id').value = '';
+            document.getElementById('result-modal').style.display = 'block';
+            loadInscriptions();
+        }
     </script>
 </body>
 </html>

@@ -86,6 +86,42 @@ foreach ($sessions as $session) {
     $centres[$session['id']] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
+// Récupérer les inscriptions du candidat avec leurs statuts
+$stmt = $conn->prepare("
+    SELECT 
+        i.*,
+        c.nom as concours_nom,
+        c.description as concours_description,
+        sc.date_ouverture,
+        sc.date_cloture,
+        sc.nb_places,
+        ce.ville as centre_ville,
+        ce.lieu as centre_lieu,
+        ce.capacite as centre_capacite,
+        r.decision as resultat
+    FROM INSCRIPTION i
+    JOIN SESSION_CONCOURS sc ON i.session_id = sc.id
+    JOIN CONCOURS c ON sc.concours_id = c.id
+    LEFT JOIN CENTRE_EXAMEN ce ON i.centre_id = ce.id
+    LEFT JOIN RESULTAT r ON r.inscription_id = i.id
+    WHERE i.candidat_id = (
+        SELECT id FROM CANDIDAT 
+        WHERE utilisateur_id = ?
+    )
+    ORDER BY i.created_at DESC
+");
+$stmt->execute([$_SESSION['user_id']]);
+$inscriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Récupérer le nombre de concours disponibles
+$stmt = $conn->prepare("
+    SELECT COUNT(*) as nb_concours
+    FROM SESSION_CONCOURS sc
+    WHERE sc.date_cloture >= CURDATE()
+");
+$stmt->execute();
+$nb_concours = $stmt->fetch(PDO::FETCH_ASSOC)['nb_concours'];
+
 // Récupérer les inscriptions sans paiement
 $stmt = $conn->prepare("
     SELECT 
@@ -108,32 +144,6 @@ $stmt = $conn->prepare("
 ");
 $stmt->execute([$_SESSION['user_id']]);
 $inscriptions_sans_paiement = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// Récupérer les inscriptions existantes du candidat
-$stmt = $conn->prepare("
-    SELECT 
-        i.*, 
-        sc.concours_id, 
-        c.nom as concours_nom,
-        c.description as concours_description,
-        sc.date_ouverture,
-        sc.date_cloture,
-        sc.nb_places,
-        ce.ville as centre_ville,
-        ce.lieu as centre_lieu,
-        ce.capacite as centre_capacite
-    FROM INSCRIPTION i
-    JOIN SESSION_CONCOURS sc ON i.session_id = sc.id
-    JOIN CONCOURS c ON sc.concours_id = c.id
-    LEFT JOIN CENTRE_EXAMEN ce ON i.centre_id = ce.id
-    WHERE i.candidat_id = (
-        SELECT id FROM CANDIDAT 
-        WHERE utilisateur_id = ?
-    )
-    ORDER BY i.created_at DESC
-");
-$stmt->execute([$_SESSION['user_id']]);
-$inscriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Récupérer les paiements des inscriptions
 $stmt = $conn->prepare("
@@ -259,14 +269,10 @@ $user_name = $_SESSION['user_name'];
                     <h3>Profil candidat</h3>
                     <ul>
                         <li data-section="postuler"><a href="#" data-target="postuler"><i class="fas fa-file-alt"></i> Postuler à un concours</a></li>
-                        <li data-section="suivi"><a href="#" data-target="suivi"><i class="fas fa-tasks"></i> Suivi des étapes</a></li>
                         <li data-section="dossier"><a href="#" data-target="dossier"><i class="fas fa-folder"></i> Mon dossier en ligne</a></li>
-                        <li data-section="fiches"><a href="#" data-target="fiches"><i class="fas fa-receipt"></i> Fiches & reçus</a></li>
                         <li data-section="login"><a href="#" data-target="login"><i class="fas fa-key"></i> Login et mot de passe</a></li>
                         <li data-section="formations"><a href="#" data-target="formations"><i class="fas fa-graduation-cap"></i> Formations / Diplômes</a></li>
                         <li data-section="paiement"><a href="#" data-target="paiement"><i class="fas fa-money-bill-wave"></i> Régulariser un paiement</a></li>
-                        <li data-section="cours"><a href="#" data-target="cours"><i class="fas fa-book"></i> Cours de préparation</a></li>
-                        <li data-section="reclamations"><a href="#" data-target="reclamations"><i class="fas fa-exclamation-circle"></i> Réclamations</a></li>
                     </ul>
                 </div>
             </nav>
@@ -289,49 +295,90 @@ $user_name = $_SESSION['user_name'];
                 <div class="dashboard-grid">
                     <div class="widget">
                         <div class="widget-header">
-                            <h3>Mes concours en cours</h3>
+                            <h3>Mes inscriptions concours</h3>
                             <i class="fas fa-trophy"></i>
                         </div>
                         <div class="widget-content">
-                            <div class="concours-item">
-                                <i class="fas fa-graduation-cap"></i>
-                                <div class="concours-info">
-                                    <h4>Concours ENA 2025</h4>
-                                    <p>Date limite: 15/06/2025</p>
+                            <?php if (empty($inscriptions)): ?>
+                                <p class="no-inscription" style="text-align: center; color: #666; font-style: italic; padding: 20px; background: #f8f9fa; border-radius: 8px;">Aucune inscription en cours</p>
+                            <?php else: ?>
+                                <div style="display: grid; gap: 15px;">
+                                    <?php foreach ($inscriptions as $inscription): ?>
+                                        <div style="background: #ffffff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); overflow: hidden;">
+                                            <div style="display: flex; align-items: center; padding: 15px; border-bottom: 1px solid #eee;">
+                                                <div style="width: 40px; height: 40px; background: #f8f9fa; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                                                    <i class="fas fa-graduation-cap" style="font-size: 20px; color: #2c3e50;"></i>
+                                                </div>
+                                                <div style="flex: 1;">
+                                                    <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 1.1em;"><?php echo htmlspecialchars($inscription['concours_nom']); ?></h4>
+                                                    <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                                        <i class="fas fa-calendar-alt" style="margin-right: 5px; color: #666;"></i>
+                                                        Date limite: <?php echo date('d/m/Y', strtotime($inscription['date_cloture'])); ?>
+                                                    </p>
+                                                </div>
+                                                <span style="padding: 8px 15px; border-radius: 20px; font-size: 0.8em; font-weight: bold; text-transform: uppercase; background-color: <?php 
+                                                    echo $inscription['statut'] === 'valide' ? '#27ae60' : 
+                                                        ($inscription['statut'] === 'en_attente' ? '#f39c12' : '#e74c3c'); 
+                                                ?>; color: white;">
+                                                    <?php echo ucfirst($inscription['statut']); ?>
+                                                </span>
+                                            </div>
+                                            <?php if ($inscription['statut'] === 'valide'): ?>
+                                                <div style="background: #ecf0f1; padding: 12px 15px; display: flex; align-items: center;">
+                                                    <i class="fas fa-file-alt" style="color: #3498db; margin-right: 10px;"></i>
+                                                    <span style="color: #3498db; font-size: 0.9em;">
+                                                        Votre convocation est disponible dans la section "Mon dossier en ligne"
+                                                    </span>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
                                 </div>
-                                <span class="status-badge status-en-cours">En cours</span>
-                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
 
                     <div class="widget">
                         <div class="widget-header">
-                            <h3>Prochaines étapes</h3>
+                            <h3>Nombre de concours disponibles</h3>
                             <i class="fas fa-calendar-alt"></i>
                         </div>
                         <div class="widget-content">
-                            <div class="calendar">
-                                <!-- Calendar content will be added dynamically -->
+                            <div style="text-align: center; padding: 30px 20px; background: #f8f9fa; border-radius: 8px;">
+                                <span style="font-size: 48px; font-weight: bold; color: #2c3e50; display: block; line-height: 1;"><?php echo $nb_concours; ?></span>
+                                <p style="margin: 10px 0 0 0; color: #666; font-size: 1.1em;">concours ouverts</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="widget">
                         <div class="widget-header">
-                            <h3>Notifications récentes</h3>
+                            <h3>Résultats des concours</h3>
                             <i class="fas fa-bell"></i>
                         </div>
                         <div class="widget-content">
-                            <div class="notification-item">
-                                <div class="notification-icon">
-                                    <i class="fas fa-info-circle"></i>
+                            <?php if (empty($inscriptions)): ?>
+                                <p style="text-align: center; color: #666; font-style: italic; padding: 20px; background: #f8f9fa; border-radius: 8px;">Aucun résultat disponible</p>
+                            <?php else: ?>
+                                <div style="display: grid; gap: 15px;">
+                                    <?php foreach ($inscriptions as $inscription): ?>
+                                        <?php if ($inscription['resultat']): ?>
+                                            <div style="background: #ffffff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 15px; display: flex; align-items: center;">
+                                                <div style="width: 40px; height: 40px; background: #e3f2fd; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                                                    <i class="fas fa-info-circle" style="font-size: 20px; color: #3498db;"></i>
+                                                </div>
+                                                <div>
+                                                    <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 1.1em;"><?php echo htmlspecialchars($inscription['concours_nom']); ?></h4>
+                                                    <p style="margin: 0; color: #666; font-size: 0.9em;">
+                                                        <i class="fas fa-check-circle" style="margin-right: 5px; color: #666;"></i>
+                                                        Résultat: <?php echo ucfirst($inscription['resultat']); ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+                                    <?php endforeach; ?>
                                 </div>
-                                <div class="notification-content">
-                                    <h4>Nouvelle étape disponible</h4>
-                                    <p>Votre dossier a été validé pour le concours ENA 2025</p>
-                                    <span class="notification-time">Il y a 2 heures</span>
-                                </div>
-                            </div>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -987,17 +1034,12 @@ $user_name = $_SESSION['user_name'];
                 }
             </style>
 
-            <div class="content-section" id="suivi">
-                <div class="content-header">
-                    <h1>Suivi des étapes</h1>
-                </div>
-                <div class="section-content">
-                    <!-- Suivi content will be loaded here -->
-                </div>
-            </div>
             <div class="content-section" id="dossier">
                 <div class="content-header">
                     <h1>Mon dossier en ligne</h1>
+                    <button class="add-document-btn" onclick="showAddDocumentModal()">
+                        <i class="fas fa-plus"></i> Ajouter un document
+                    </button>
                 </div>
                 <div class="section-content">
                     <div class="documents-container">
@@ -1047,14 +1089,157 @@ $user_name = $_SESSION['user_name'];
                     </div>
                 </div>
             </div>
-            <div class="content-section" id="fiches">
-                <div class="content-header">
-                    <h1>Fiches & reçus</h1>
-                </div>
-                <div class="section-content">
-                    <!-- Fiches content will be loaded here -->
+
+            <!-- Modal d'ajout de document -->
+            <div id="addDocumentModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Ajouter un nouveau document</h2>
+                        <span class="close-modal" onclick="hideAddDocumentModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addDocumentForm" class="document-form" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="typeDocument">Type de document</label>
+                                <select id="typeDocument" name="type_document" required onchange="toggleAutreType()">
+                                    <option value="">Sélectionnez un type de document</option>
+                                    <option value="Photo d'identité">Photo d'identité</option>
+                                    <option value="CNI">CNI</option>
+                                    <option value="Diplôme">Diplôme</option>
+                                    <option value="Attestation">Attestation</option>
+                                    <option value="autre">Autre</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="autreTypeGroup" style="display: none;">
+                                <label for="autreType">Précisez le type de document</label>
+                                <input type="text" id="autreType" name="autre_type" placeholder="Ex: Certificat de travail">
+                            </div>
+                            <div class="form-group">
+                                <label for="documentFile">Fichier</label>
+                                <input type="file" id="documentFile" name="document_file" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small>Formats acceptés : PDF, JPG, JPEG, PNG</small>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" onclick="hideAddDocumentModal()">Annuler</button>
+                                <button type="submit" class="submit-btn">Ajouter le document</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
+
+            <script>
+                function showAddDocumentModal() {
+                    document.getElementById('addDocumentModal').style.display = 'block';
+                }
+
+                function hideAddDocumentModal() {
+                    document.getElementById('addDocumentModal').style.display = 'none';
+                    // Réinitialiser le formulaire
+                    document.getElementById('addDocumentForm').reset();
+                    document.getElementById('autreTypeGroup').style.display = 'none';
+                }
+
+                function toggleAutreType() {
+                    const typeSelect = document.getElementById('typeDocument');
+                    const autreTypeGroup = document.getElementById('autreTypeGroup');
+                    const autreTypeInput = document.getElementById('autreType');
+                    
+                    if (typeSelect.value === 'autre') {
+                        autreTypeGroup.style.display = 'block';
+                        autreTypeInput.required = true;
+                    } else {
+                        autreTypeGroup.style.display = 'none';
+                        autreTypeInput.required = false;
+                    }
+                }
+
+                // Gérer la soumission du formulaire d'ajout de document
+                document.getElementById('addDocumentForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    const typeSelect = document.getElementById('typeDocument');
+                    const autreTypeInput = document.getElementById('autreType');
+                    
+                    // Si le type est "autre", utiliser la valeur du champ autre_type comme type_document
+                    if (typeSelect.value === 'autre') {
+                        formData.set('type_document', autreTypeInput.value);
+                    }
+                    
+                    fetch('add_document.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Document ajouté avec succès !');
+                            hideAddDocumentModal();
+                            location.reload();
+                        } else {
+                            alert('Erreur lors de l\'ajout du document: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Une erreur est survenue lors de l\'ajout du document');
+                    });
+                });
+            </script>
+
+            <style>
+                .add-document-btn {
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 14px;
+                    transition: background-color 0.3s ease;
+                }
+
+                .add-document-btn:hover {
+                    background-color: #45a049;
+                }
+
+                .add-document-btn i {
+                    font-size: 16px;
+                }
+
+                .document-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .form-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+
+                .form-group label {
+                    font-weight: bold;
+                }
+
+                .form-group select,
+                .form-group input[type="file"] {
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                }
+
+                .form-group small {
+                    color: #666;
+                    font-size: 12px;
+                }
+            </style>
+
             <div class="content-section" id="login">
                 <div class="content-header">
                     <h1>Login et mot de passe</h1>
@@ -1124,9 +1309,49 @@ $user_name = $_SESSION['user_name'];
                 </div>
             </div>
 
+            <script>
+                function showPasswordModal() {
+                    document.getElementById('passwordModal').style.display = 'block';
+                }
+
+                function hidePasswordModal() {
+                    document.getElementById('passwordModal').style.display = 'none';
+                    // Réinitialiser le formulaire
+                    document.getElementById('changePasswordForm').reset();
+                }
+
+                // Gérer la soumission du formulaire de changement de mot de passe
+                document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    
+                    fetch('change_password.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Mot de passe modifié avec succès !');
+                            hidePasswordModal();
+                        } else {
+                            alert('Erreur: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Une erreur est survenue lors du changement de mot de passe');
+                    });
+                });
+            </script>
+
             <div class="content-section" id="formations">
                 <div class="content-header">
                     <h1>Formations / Diplômes</h1>
+                    <button class="add-diploma-btn" onclick="showAddDiplomaModal()">
+                        <i class="fas fa-plus"></i> Ajouter un diplôme
+                    </button>
                 </div>
                 <div class="section-content">
                     <div class="diplomas-container">
@@ -1181,6 +1406,149 @@ $user_name = $_SESSION['user_name'];
                 </div>
             </div>
 
+            <!-- Modal d'ajout de diplôme -->
+            <div id="addDiplomaModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Ajouter un nouveau diplôme</h2>
+                        <span class="close-modal" onclick="hideAddDiplomaModal()">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addDiplomaForm" class="diploma-form" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="diplomaName">Nom du diplôme</label>
+                                <input type="text" id="diplomaName" name="nom" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="diplomaLevel">Niveau</label>
+                                <select id="diplomaLevel" name="niveau" required>
+                                    <option value="">Sélectionnez un niveau</option>
+                                    <option value="CEPE">CEPE (Certificat d'Études Primaires Élémentaires)</option>
+                                    <option value="BEPC">BEPC (Brevet d'Études du Premier Cycle)</option>
+                                    <option value="CAP">CAP (Certificat d'Aptitude Professionnelle)</option>
+                                    <option value="BEP">BEP (Brevet d'Études Professionnelles)</option>
+                                    <option value="BAC">BAC (Baccalauréat)</option>
+                                    <option value="BAC+1">BAC+1</option>
+                                    <option value="BAC+2">BAC+2</option>
+                                    <option value="BAC+3">BAC+3 (Licence)</option>
+                                    <option value="BAC+4">BAC+4 (Master 1)</option>
+                                    <option value="BAC+5">BAC+5 (Master 2)</option>
+                                    <option value="BAC+6">BAC+6</option>
+                                    <option value="BAC+7">BAC+7</option>
+                                    <option value="BAC+8">BAC+8</option>
+                                    <option value="Doctorat">Doctorat</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="diplomaYear">Année d'obtention</label>
+                                <input type="number" id="diplomaYear" name="annee_obtention" min="1900" max="<?php echo date('Y'); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="diplomaInstitution">Établissement</label>
+                                <input type="text" id="diplomaInstitution" name="etablissement" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="diplomaScan">Scan du diplôme</label>
+                                <input type="file" id="diplomaScan" name="scan" accept=".pdf,.jpg,.jpeg,.png" required>
+                                <small>Formats acceptés : PDF, JPG, JPEG, PNG</small>
+                            </div>
+                            <div class="form-actions">
+                                <button type="button" class="cancel-btn" onclick="hideAddDiplomaModal()">Annuler</button>
+                                <button type="submit" class="submit-btn">Ajouter le diplôme</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                function showAddDiplomaModal() {
+                    document.getElementById('addDiplomaModal').style.display = 'block';
+                }
+
+                function hideAddDiplomaModal() {
+                    document.getElementById('addDiplomaModal').style.display = 'none';
+                    document.getElementById('addDiplomaForm').reset();
+                }
+
+                // Gérer la soumission du formulaire d'ajout de diplôme
+                document.getElementById('addDiplomaForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(this);
+                    
+                    fetch('add_diploma.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert('Diplôme ajouté avec succès !');
+                            hideAddDiplomaModal();
+                            location.reload();
+                        } else {
+                            alert('Erreur lors de l\'ajout du diplôme: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Une erreur est survenue lors de l\'ajout du diplôme');
+                    });
+                });
+            </script>
+
+            <style>
+                .add-diploma-btn {
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    font-size: 14px;
+                    transition: background-color 0.3s ease;
+                }
+
+                .add-diploma-btn:hover {
+                    background-color: #45a049;
+                }
+
+                .add-diploma-btn i {
+                    font-size: 16px;
+                }
+
+                .diploma-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 20px;
+                }
+
+                .form-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+
+                .form-group label {
+                    font-weight: bold;
+                }
+
+                .form-group input,
+                .form-group select {
+                    padding: 10px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                }
+
+                .form-group small {
+                    color: #666;
+                    font-size: 12px;
+                }
+            </style>
 
             <div class="content-section" id="paiement">
                 <div class="content-header">
@@ -1684,22 +2052,6 @@ $user_name = $_SESSION['user_name'];
                 }
             </style>
 
-            <div class="content-section" id="cours">
-                <div class="content-header">
-                    <h1>Cours de préparation</h1>
-                </div>
-                <div class="section-content">
-                    <!-- Cours content will be loaded here -->
-                </div>
-            </div>
-            <div class="content-section" id="reclamations">
-                <div class="content-header">
-                    <h1>Réclamations</h1>
-                </div>
-                <div class="section-content">
-                    <!-- Réclamations content will be loaded here -->
-                </div>
-            </div>
            
             
         </main>

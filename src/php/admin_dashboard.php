@@ -3487,9 +3487,12 @@ try {
                         `;
                     } else {
                         validationActions.innerHTML = `
-                            <p class="status-message">
-                                Ce candidat a déjà été ${data.statut === 'valide' ? 'validé' : 'rejeté'}
-                            </p>
+                            <button class="action-btn validate-btn" onclick="validateCandidate(${candidateId})">
+                                <i class="fas fa-check"></i> Valider
+                            </button>
+                            <button class="action-btn reject-btn" onclick="rejectCandidate(${candidateId})">
+                                <i class="fas fa-times"></i> Rejeter
+                            </button>
                         `;
                     }
 

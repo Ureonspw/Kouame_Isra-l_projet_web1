@@ -18,7 +18,7 @@ try {
     }
     
     // Créer le dossier de stockage s'il n'existe pas
-    $upload_dir = '../../uploads/convocations/';
+    $upload_dir = '../../uploads/documents/';
     if (!file_exists($upload_dir)) {
         mkdir($upload_dir, 0777, true);
     }
@@ -39,7 +39,7 @@ try {
     $stmt->execute([
         'candidate_id' => $candidate_id,
         'type_document' => 'convocation',
-        'file_url' => 'uploads/convocations/' . $filename
+        'file_url' => 'uploads/documents/' . $filename
     ]);
     
     echo json_encode(['success' => true]);

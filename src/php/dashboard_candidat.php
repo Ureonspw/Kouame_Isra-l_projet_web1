@@ -180,6 +180,7 @@ $user_name = $_SESSION['user_name'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../../assets/css/dashboard.css">
     <link rel="stylesheet" href="../../assets/css/profile.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>PUBLIGEST CI</title>
 </head>
@@ -274,6 +275,8 @@ $user_name = $_SESSION['user_name'];
                         <li data-section="login"><a href="#" data-target="login"><i class="fas fa-key"></i> Login et mot de passe</a></li>
                         <li data-section="formations"><a href="#" data-target="formations"><i class="fas fa-graduation-cap"></i> Formations / Diplômes</a></li>
                         <li data-section="paiement"><a href="#" data-target="paiement"><i class="fas fa-money-bill-wave"></i> Régulariser un paiement</a></li>
+                        <li data-section="revision"><a href="#" data-target="revision"><i class="fas fa-edit"></i> Revision IA</a></li>
+
                     </ul>
                 </div>
             </nav>
@@ -767,279 +770,6 @@ $user_name = $_SESSION['user_name'];
                 });
             </script>
 
-            <style>
-                .postuler-container {
-                    padding: 20px;
-                }
-
-                .inscriptions-existantes,
-                .concours-disponibles {
-                    margin-bottom: 40px;
-                }
-
-                .inscriptions-grid,
-                .concours-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                    gap: 20px;
-                    margin-top: 20px;
-                }
-
-                .inscription-card,
-                .concours-card {
-                    background: #fff;
-                    border-radius: 10px;
-                    padding: 20px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                    transition: transform 0.3s ease;
-                }
-
-                .inscription-card:hover,
-                .concours-card:hover {
-                    transform: translateY(-5px);
-                }
-
-                .inscription-header,
-                .concours-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 15px;
-                }
-
-                .statut-badge {
-                    padding: 5px 10px;
-                    border-radius: 15px;
-                    font-size: 0.8em;
-                    font-weight: bold;
-                }
-
-                .statut-valide {
-                    background-color: #4CAF50;
-                    color: white;
-                }
-
-                .statut-en_attente {
-                    background-color: #FFC107;
-                    color: black;
-                }
-
-                .statut-rejete {
-                    background-color: #F44336;
-                    color: white;
-                }
-
-                .concours-dates {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                    font-size: 0.9em;
-                    color: #666;
-                }
-
-                .concours-content {
-                    margin: 15px 0;
-                }
-
-                .concours-description {
-                    color: #666;
-                    margin-bottom: 15px;
-                }
-
-                .concours-info {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    color: #666;
-                }
-
-                .btn-inscription {
-                    background-color: #4CAF50;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    width: 100%;
-                    transition: background-color 0.3s ease;
-                }
-
-                .btn-inscription:hover {
-                    background-color: #45a049;
-                }
-
-                .btn-inscription:disabled {
-                    background-color: #cccccc;
-                    cursor: not-allowed;
-                }
-
-                .modal {
-                    display: none;
-                    position: fixed;
-                    z-index: 1000;
-                    left: 0;
-                    top: 0;
-                    width: 100%;
-                    height: 100%;
-                    background-color: rgba(0,0,0,0.5);
-                }
-
-                .modal-content {
-                    background-color: #fefefe;
-                    margin: 10% auto;
-                    padding: 20px;
-                    border-radius: 10px;
-                    width: 50%;
-                    max-width: 600px;
-                }
-
-                .modal-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 20px;
-                }
-
-                .close-modal {
-                    font-size: 28px;
-                    font-weight: bold;
-                    cursor: pointer;
-                }
-
-                .inscription-form {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-                }
-
-                .form-group {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                }
-
-                .form-group label {
-                    font-weight: bold;
-                }
-
-                .form-group select {
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                }
-
-                .form-actions {
-                    display: flex;
-                    justify-content: flex-end;
-                    gap: 10px;
-                    margin-top: 20px;
-                }
-
-                .cancel-btn,
-                .submit-btn {
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                }
-
-                .cancel-btn {
-                    background-color: #f44336;
-                    color: white;
-                    border: none;
-                }
-
-                .submit-btn {
-                    background-color: #4CAF50;
-                    color: white;
-                    border: none;
-                }
-
-                @media (max-width: 768px) {
-                    .modal-content {
-                        width: 90%;
-                        margin: 20% auto;
-                    }
-
-                    .inscriptions-grid,
-                    .concours-grid {
-                        grid-template-columns: 1fr;
-                    }
-                }
-
-                .inscription-content {
-                    margin-top: 15px;
-                }
-
-                .inscription-description {
-                    color: #666;
-                    margin-bottom: 15px;
-                    font-style: italic;
-                }
-
-                .inscription-details {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin-top: 15px;
-                }
-
-                .detail-group {
-                    background: #f8f9fa;
-                    padding: 15px;
-                    border-radius: 8px;
-                }
-
-                .detail-group h4 {
-                    margin-bottom: 10px;
-                    color: #333;
-                    font-size: 1.1em;
-                }
-
-                .detail-group p {
-                    margin: 5px 0;
-                    color: #666;
-                    font-size: 0.9em;
-                }
-
-                .inscription-actions {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-
-                .btn-delete {
-                    background: none;
-                    border: none;
-                    color: #dc3545;
-                    cursor: pointer;
-                    padding: 5px;
-                    border-radius: 50%;
-                    transition: background-color 0.3s ease;
-                }
-
-                .btn-delete:hover {
-                    background-color: rgba(220, 53, 69, 0.1);
-                }
-
-                .delete-btn {
-                    background-color: #dc3545;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                }
-
-                .delete-btn:hover {
-                    background-color: #c82333;
-                }
-
-                @media (max-width: 768px) {
-                    .inscription-details {
-                        grid-template-columns: 1fr;
-                    }
-                }
-            </style>
 
             <div class="content-section" id="dossier">
                 <div class="content-header">
@@ -1195,57 +925,6 @@ $user_name = $_SESSION['user_name'];
                 });
             </script>
 
-            <style>
-                .add-document-btn {
-                    background-color: #4CAF50;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 14px;
-                    transition: background-color 0.3s ease;
-                }
-
-                .add-document-btn:hover {
-                    background-color: #45a049;
-                }
-
-                .add-document-btn i {
-                    font-size: 16px;
-                }
-
-                .document-form {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-                }
-
-                .form-group {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                }
-
-                .form-group label {
-                    font-weight: bold;
-                }
-
-                .form-group select,
-                .form-group input[type="file"] {
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                }
-
-                .form-group small {
-                    color: #666;
-                    font-size: 12px;
-                }
-            </style>
 
             <div class="content-section" id="login">
                 <div class="content-header">
@@ -1356,9 +1035,6 @@ $user_name = $_SESSION['user_name'];
             <div class="content-section" id="formations">
                 <div class="content-header">
                     <h1>Formations / Diplômes</h1>
-                    <button class="add-diploma-btn" onclick="showAddDiplomaModal()">
-                        <i class="fas fa-plus"></i> Ajouter un diplôme
-                    </button>
                 </div>
                 <div class="section-content">
                     <div class="diplomas-container">
@@ -1505,58 +1181,6 @@ $user_name = $_SESSION['user_name'];
                 });
             </script>
 
-            <style>
-                .add-diploma-btn {
-                    background-color: #4CAF50;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
-                    font-size: 14px;
-                    transition: background-color 0.3s ease;
-                }
-
-                .add-diploma-btn:hover {
-                    background-color: #45a049;
-                }
-
-                .add-diploma-btn i {
-                    font-size: 16px;
-                }
-
-                .diploma-form {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-                }
-
-                .form-group {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                }
-
-                .form-group label {
-                    font-weight: bold;
-                }
-
-                .form-group input,
-                .form-group select {
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                }
-
-                .form-group small {
-                    color: #666;
-                    font-size: 12px;
-                }
-            </style>
-
             <div class="content-section" id="paiement">
                 <div class="content-header">
                     <h1>Régulariser un paiement</h1>
@@ -1683,6 +1307,18 @@ $user_name = $_SESSION['user_name'];
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="content-section" id="revision">
+                <div class="content-header">
+                    <h1>Revision ia</h1>
+                </div>
+                <div class="section-content iarev">
+                    <button onclick="window.location.href='../../src/html/iarev.html'">
+                        <i class="fas fa-robot"></i>
+                        Accéder à l'espace de révision IA
+                    </button>
                 </div>
             </div>
 
@@ -1900,164 +1536,6 @@ $user_name = $_SESSION['user_name'];
                 }
             </script>
 
-            <style>
-                .paiement-container {
-                    padding: 20px;
-                }
-
-                .nouveau-paiement {
-                    margin-bottom: 40px;
-                }
-
-                .no-payment {
-                    text-align: center;
-                    color: #666;
-                    font-style: italic;
-                    padding: 20px;
-                    background: #f8f9fa;
-                    border-radius: 8px;
-                }
-
-                .inscriptions-sans-paiement {
-                    margin-top: 20px;
-                }
-
-                .paiements-en-attente,
-                .paiements-effectues {
-                    margin-bottom: 40px;
-                }
-
-                .paiements-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                    gap: 20px;
-                    margin-top: 20px;
-                }
-
-                .paiement-card {
-                    background: #fff;
-                    border-radius: 10px;
-                    padding: 20px;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                    transition: transform 0.3s ease;
-                }
-
-                .paiement-card:hover {
-                    transform: translateY(-5px);
-                }
-
-                .paiement-header {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    margin-bottom: 15px;
-                }
-
-                .paiement-content {
-                    margin-top: 15px;
-                }
-
-                .paiement-details {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin-bottom: 20px;
-                }
-
-                .detail-group {
-                    background: #f8f9fa;
-                    padding: 15px;
-                    border-radius: 8px;
-                }
-
-                .detail-group h4 {
-                    margin-bottom: 10px;
-                    color: #333;
-                    font-size: 1.1em;
-                }
-
-                .detail-group p {
-                    margin: 5px 0;
-                    color: #666;
-                    font-size: 0.9em;
-                }
-
-                .btn-payer {
-                    background-color: #4CAF50;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    width: 100%;
-                    transition: background-color 0.3s ease;
-                }
-
-                .btn-payer:hover {
-                    background-color: #45a049;
-                }
-
-                .paiement-form {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 20px;
-                }
-
-                .form-group {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                }
-
-                .form-group label {
-                    font-weight: bold;
-                }
-
-                .form-group input,
-                .form-group select {
-                    padding: 10px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                }
-
-                @media (max-width: 768px) {
-                    .paiement-details {
-                        grid-template-columns: 1fr;
-                    }
-                }
-
-                .btn-valider {
-                    background-color: #28a745;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    width: 100%;
-                    margin-top: 10px;
-                    transition: background-color 0.3s ease;
-                }
-
-                .btn-valider:hover {
-                    background-color: #218838;
-                }
-
-                .btn-annuler {
-                    background-color: #dc3545;
-                    color: white;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    cursor: pointer;
-                    width: 100%;
-                    margin-top: 10px;
-                    transition: background-color 0.3s ease;
-                }
-
-                .btn-annuler:hover {
-                    background-color: #c82333;
-                }
-            </style>
 
            
             

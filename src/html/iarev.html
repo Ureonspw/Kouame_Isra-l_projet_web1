@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QCM Expert</title>
+  <link rel="stylesheet" href="../../assets/css/iarev.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Générateur de QCM Expert</h1>
+      <p class="subtitle">Créez des questionnaires professionnels en quelques clics</p>
+    </header>
+
+    <main>
+      <div class="input-section">
+        <label for="promptInput">Sujet ou domaine d'expertise</label>
+        <textarea id="promptInput" rows="5" placeholder="Entrez votre sujet ici (ex: police, droit pénal, procédures policières, etc.)..."></textarea>
+      </div>
+      
+      <button class="generate-btn" onclick="generateQCM()">
+        <span class="btn-text">Générer le QCM Expert</span>
+        <span class="btn-icon">→</span>
+      </button>
+
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <span>Génération en cours...</span>
+      </div>
+      
+      <div id="error" class="error"></div>
+      <div id="qcm-container" class="qcm-container"></div>
+    </main>
+  </div>
+
+  <script src="../../assets/js/iarev.js"></script>
+</body>
+</html> 

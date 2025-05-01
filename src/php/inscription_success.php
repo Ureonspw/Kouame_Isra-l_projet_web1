@@ -67,7 +67,7 @@ unset($_SESSION['success']);
         <h2 class="mb-4">Inscription réussie !</h2>
         <p class="lead mb-4"><?php echo htmlspecialchars($success_message); ?></p>
         <p class="mb-4">Vous pouvez maintenant vous connecter à votre compte.</p>
-        <a href="login.php" class="btn btn-primary btn-lg">Se connecter</a>
+        <a href="../../index.php" class="btn btn-primary btn-lg">Se connecter</a>
     </div>
 
     <!-- Bootstrap JS -->

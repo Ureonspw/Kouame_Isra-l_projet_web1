@@ -135,7 +135,7 @@ try {
             <h1>ADMIN PUBLIGEST CI</h1>
         </div>
         <div class="content">
-            <p>bienvenu sur le dashboard admin de PUBLIGEST CI. vous pouvez gérer les informations de l'entreprise et les candidatures.</p>
+            <p>bienvenu sur le dashboard admin de PUBLIGEST CI. vous pouvez gérer les informations concours et les candidatures.</p>
         </div>
         <div class="contenuvus">
             <div class="menu1">
@@ -144,11 +144,11 @@ try {
             </div>
             <div class="menu2">
                 <img src="" alt="">
-                <h3>Inscription</h3>
+                <h3>Validation</h3>
             </div>
             <div class="menu3">
                 <img src="" alt="">
-                <h3>Inscription</h3>
+                <h3>Resultat</h3>
             </div>
         </div>
         <div class="imganimationcirlcle">
